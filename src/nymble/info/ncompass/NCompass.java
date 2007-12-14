@@ -12,7 +12,6 @@ public class NCompass extends Activity
     {
         super.onCreate(icicle);
         
-        setTheme(R.style.Theme_Translucent);      
         LocationManager locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         
         Location target = new Location();
