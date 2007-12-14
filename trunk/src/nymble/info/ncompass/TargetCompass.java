@@ -127,6 +127,14 @@ public class TargetCompass extends View
             r.right = r.left + h;
         }
         
+        int scale = (int)((r.right - r.left)*.1);
+        
+        r.left += scale;
+        r.right -= scale;
+        r.top += scale;
+        r.bottom -= scale;
+        
+        
         return r;
     }
     
