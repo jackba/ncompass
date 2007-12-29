@@ -77,8 +77,15 @@ public class Recent extends ContentProvider
     @Override
     public boolean onCreate()
     {
-        conn = new DB().openDatabase(getContext(), DB.FILE_NAME, null, DB.VERSION);
-        return conn == null;
+        Context c = getContext();
+        
+        Log.i("Context Info", "" + c.getDataDir());
+        Log.i("Context Info", "" + c.getPackageName());
+        Log.i("Context Info", "" + c.getPackagePath());
+               
+        
+        conn = new DB().openDatabase(c, DB.FILE_NAME, null, DB.VERSION);
+        return conn != null;
     }
     
 
@@ -261,9 +268,9 @@ public class Recent extends ContentProvider
         static
         {
             COLUMNS.put(ID, ID);
+            COLUMNS.put(CREATED, CREATED);
             COLUMNS.put(LAT, LAT);
             COLUMNS.put(LON, LON);
-            COLUMNS.put(CREATED, CREATED);
             
             SQL_SELECT_RECENT = "SELECT " + ID + ", " + LAT + ", " + LON + ", " + CREATED + 
                                 " FROM " + TABLE + 
