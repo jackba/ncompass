@@ -2,6 +2,7 @@ package info.nymble.ncompass;
 
 import info.nymble.measure.Stopwatch;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -161,6 +162,7 @@ public class TargetCompass extends View
     public boolean onMotionEvent(MotionEvent event)
     {
         mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
+        mContext.startActivity(new Intent(Intent.VIEW_ACTION, Recent.CONTENT_URI));
         this.invalidate();
         return true;
     }

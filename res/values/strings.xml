@@ -2,4 +2,15 @@
 <resources>
     <string name="app_name">NCompass</string>
     <string name="recent_locations_title">Recent Locations</string>
+    <string name="recent_view_list">Recent Locations</string>
+    <string name="empty_list">No Recent Locations</string>
+    
+    
+    
+    
+    <string name="title">Beach Cabin</string>
+    <string name="untitled">untitled</string>
+    <string name="date">Yesterday 3PM</string>
+    <string name="distance">15.3 mi</string>
+    <string name="person">Jodi</string>
 </resources>
