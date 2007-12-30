@@ -14,11 +14,29 @@
             -->
         </activity>
     	
+    	<activity class="PlaceListActivity" 
+        	android:label="@string/recent_locations_title"
+        	android:theme="@style/Theme.Black">
+			<!--
+	            <intent-filter>
+	                <action android:value="android.intent.action.MAIN" />
+	                <category android:value="android.intent.category.LAUNCHER" />
+	            </intent-filter>
+            -->
+        </activity>
+    	
+    	
+    	
     	
 
     	<provider class="Recent"
                 android:authorities="info.nymble.location.Recent" />
                 
+    	<provider class="PlaceBookProvider"
+                android:authorities="info.nymble.ncompass.placebook" />
+                
+
+
 
     	<activity class="RecentListActivity" 
         	android:label="@string/recent_locations_title"

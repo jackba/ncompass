@@ -9,6 +9,6 @@ public class PlaceActivity extends Activity
     protected void onCreate(Bundle icicle)
     {
         super.onCreate(icicle);
-        setContentView(R.layout.place);
+        setContentView(R.layout.recent_location_entry);
     }
 }
