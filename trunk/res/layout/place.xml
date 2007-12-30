@@ -27,7 +27,7 @@
             android:textAlign="center" />
         <ImageView
         	android:adjustViewBounds="true"
-            android:src="@drawable/icon"
+            android:src="@drawable/beach"
             android:scaleType="fitEnd"
             android:maxHeight="30px"
             />
