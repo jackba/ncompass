@@ -1,11 +1,13 @@
 package info.nymble.ncompass;
 
 import info.nymble.ncompass.PlaceBook.Lists;
+import info.nymble.ncompass.PlaceBook.Places;
 import android.app.Activity;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,15 +29,15 @@ public class PlaceListActivity extends Activity
         Cursor c = managedQuery(Lists.LISTS_URI, null, null, null);
         Gallery g = (Gallery) findViewById(R.id.list_gallery);
 
+        Log.w("PlaceListActivity", "Cursor contains " + c.count());
         g.setAdapter(new TextListAdapter(c, getViewInflate()));
-//        g.setSelectorSkin(getResources().getDrawable(R.drawable.gallery_background_1));
-        
+
 
         ListView list = (ListView) findViewById(R.id.list_contents);
         LocationTracker tracker = new LocationTracker(this);
-        String[] columns = new String[]{Recent.ID, Recent.CREATED, Recent.LAT, Recent.LON};
-
-        c = managedQuery(Recent.CONTENT_URI, columns, null, null);
+        String[] columns = new String[]{Places.ID, Places.CREATED, Places.LAT, Places.LON, Places.TITLE};
+        
+        c = managedQuery(Places.PLACES_URI, columns, null, null); 
         list.setAdapter(new PlaceListAdapter(c, getViewInflate(), tracker));
         
         
