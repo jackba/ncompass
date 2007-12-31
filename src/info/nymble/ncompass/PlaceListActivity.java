@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.ViewInflate;
 import android.widget.Gallery;
 import android.widget.GalleryAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class PlaceListActivity extends Activity
@@ -27,9 +28,17 @@ public class PlaceListActivity extends Activity
         Gallery g = (Gallery) findViewById(R.id.list_gallery);
 
         g.setAdapter(new TextListAdapter(c, getViewInflate()));
-        g.setSelectorSkin(getResources().getDrawable(R.drawable.gallery_background_1));
+//        g.setSelectorSkin(getResources().getDrawable(R.drawable.gallery_background_1));
         
 
+        ListView list = (ListView) findViewById(R.id.list_contents);
+        LocationTracker tracker = new LocationTracker(this);
+        String[] columns = new String[]{Recent.ID, Recent.CREATED, Recent.LAT, Recent.LON};
+
+        c = managedQuery(Recent.CONTENT_URI, columns, null, null);
+        list.setAdapter(new PlaceListAdapter(c, getViewInflate(), tracker));
+        
+        
         
         
 //        LocationTracker tracker = new LocationTracker(this);
@@ -131,9 +140,7 @@ public class PlaceListActivity extends Activity
 
         public View getMeasurementView(ViewGroup arg0)
         {
-            View v = null;
-            
-            // inflate view with no params
+            View v = inflate.inflate(R.layout.list_entry, null, null);
             
             return v;
         }

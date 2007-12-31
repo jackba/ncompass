@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="info.nymble.ncompass">
+    
     <application android:icon="@drawable/icon">
     	
     	<activity class="PlaceActivity" 
@@ -15,8 +16,7 @@
         </activity>
     	
     	<activity class="PlaceListActivity" 
-        	android:label="@string/recent_locations_title"
-        	android:theme="@style/Theme.Black">
+        	android:label="@string/recent_locations_title">
 			<!--
 	            <intent-filter>
 	                <action android:value="android.intent.action.MAIN" />
