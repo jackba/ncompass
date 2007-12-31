@@ -31,12 +31,12 @@ public class PlaceBookProvider  extends ContentProvider
     public PlaceBookProvider()
     {
         parser = new ContentURIParser(ContentURIParser.NO_MATCH);
-        parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH, 10);
-        parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH + "/#", 11);
-        parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH, 20);
-        parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH + "/#", 21);
-        parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH, 30);
-        parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH + "/#", 31);
+        parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH, 0);
+        parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH + "/#", 1);
+        parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH, 2);
+        parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH + "/#", 3);
+        parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH, 4);
+        parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH + "/#", 5);
     }
     
     
@@ -45,17 +45,17 @@ public class PlaceBookProvider  extends ContentProvider
     {
         switch (parser.match(uri))
         {
-            case 10:
+            case 0:
                 return PlaceBook.MIME_DIRECTORY + PlaceBook.MIME_BASE + Places.PLACES_PATH;
-            case 11:
+            case 1:
                 return PlaceBook.MIME_ITEM + PlaceBook.MIME_BASE + Places.PLACES_PATH;
-            case 20:
+            case 2:
                 return PlaceBook.MIME_DIRECTORY + PlaceBook.MIME_BASE + Lists.LISTS_PATH;
-            case 21:
+            case 3:
                 return PlaceBook.MIME_ITEM + PlaceBook.MIME_BASE + Lists.LISTS_PATH;
-            case 30:
+            case 4:
                 return PlaceBook.MIME_DIRECTORY + PlaceBook.MIME_BASE + Intents.INTENTS_PATH;
-            case 31:
+            case 5:
                 return PlaceBook.MIME_ITEM + PlaceBook.MIME_BASE + Intents.INTENTS_PATH;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
@@ -140,14 +140,29 @@ public class PlaceBookProvider  extends ContentProvider
     @Override
     public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     {
-//        QueryBuilder qb = new QueryBuilder();
-// 
-//        qb.setTables(DB.TABLE);
-//        qb.setProjectionMap(DB.COLUMNS);
-//        if (parser.match(uri) == 2) qb.appendWhere(ID + "=" + uri.getPathSegment(1));
-//        if (TextUtils.isEmpty(sortOrder)) sortOrder = DB.SORT;
+        QueryBuilder qb = new QueryBuilder();
+        int whichURI = parser.match(uri);
+        boolean isDirectory = (whichURI % 2 == 0);
+        int whichType = whichURI >> 1;
 
-        Cursor c = conn.query("SELECT * FROM Lists", new String[0]);
+        switch (whichType)
+        {
+            case 0:
+                qb.setTables(PlaceBookDB.SQL_SELECT_PLACES);
+                break;
+            case 1:
+                qb.setTables(PlaceBookDB.SQL_SELECT_LISTS);
+                break;
+            case 2:
+                qb.setTables(PlaceBookDB.SQL_SELECT_INTENTS);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI " + uri);
+        }
+        
+        if (!isDirectory) qb.appendWhere("_id=" + uri.getPathSegment(1));
+
+        Cursor c = qb.query(conn, projection, selection, selectionArgs, groupBy, having, sortOrder);
         c.setNotificationUri(getContext().getContentResolver(), uri);
         
         return c;
