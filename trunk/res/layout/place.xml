@@ -32,6 +32,7 @@
             android:maxHeight="30px"
             />
     </TableRow>
+     
     
     <View 
     	android:background="#AAAAAAAA"
