@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 public class PlaceListAdapter implements ListAdapter
 {
-    static final String[] columns = new String[]{"itemId", "updated", Places.LAT, Places.LON, Places.TITLE, "listId"};
+    static final String[] columns = new String[]{"_id", "updated", Places.LAT, Places.LON, Places.TITLE, "list_id"};
 
     Activity activity;
     LocationTracker tracker;
@@ -37,7 +37,7 @@ public class PlaceListAdapter implements ListAdapter
     {
         Log.w("PlaceListAdapter", "printing list for listId=" + listId);
         this.activity = a;
-        this.cursor = a.managedQuery(Places.PLACES_URI, columns, "listId=" + listId, null);
+        this.cursor = a.managedQuery(Places.PLACES_URI, columns, "list_id=" + listId, null);
         this.inflate = a.getViewInflate();
         this.tracker = t;
     }
@@ -47,7 +47,10 @@ public class PlaceListAdapter implements ListAdapter
     
     public void setList(long id)
     {
-        this.cursor = activity.managedQuery(Places.PLACES_URI, columns, "listId=" + id, null);
+        this.cursor = activity.managedQuery(Places.PLACES_URI, columns, "list_id=" + id, null);
+        
+        PlaceBookDB.printCursor(this.cursor, "selected list");
+        
         observer.onChange(true);
     }
 
@@ -119,9 +122,6 @@ public class PlaceListAdapter implements ListAdapter
         l.setLatitude(Double.parseDouble(lat));
         l.setLongitude(Double.parseDouble(lon));
 
-        Log.i("location", "here.lat=" + here.getLatitude() + " here.lon=" + here.getLongitude());
-        Log.i("location", "l.lat=" + l.getLatitude() + " l.lon=" + l.getLongitude());            
-        
         double d = l.distanceTo(here);
         
         if (d > 1000)

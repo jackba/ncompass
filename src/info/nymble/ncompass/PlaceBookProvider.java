@@ -17,6 +17,8 @@ import android.location.Location;
 import android.net.ContentURI;
 import android.util.Log;
 
+
+
 public class PlaceBookProvider  extends ContentProvider
 {
     public static final ContentURI CONTENT_URI = PlaceBook.CONTENT_URI;
@@ -100,12 +102,7 @@ public class PlaceBookProvider  extends ContentProvider
 
     @Override
     /**
-     * Adds a location to the Recent list. 
-     * 
-     * @param values A ContentValues map containing the
-     * location to add. Entries for LAT and LON should 
-     * contain data of type double representing the
-     * location to be added. 
+     *  
      */
     public ContentURI insert(ContentURI uri, ContentValues values)
     {
@@ -231,17 +228,17 @@ public class PlaceBookProvider  extends ContentProvider
      * in the recent list, when it is ordered by created
      * date.
      */
-    private void cleanupOutdatedRecords()
-    {
-        try
-        {            
-            conn.execSQL("SELECT 1");
-        }
-        catch (SQLException e)
-        {
-            Log.w("Recent Location", "Failed to truncate recent list. List may continue to grow.");
-        }
-    }
+//    private void cleanupOutdatedRecords()
+//    {
+//        try
+//        {            
+//            conn.execSQL("SELECT 1");
+//        }
+//        catch (SQLException e)
+//        {
+//            Log.w("Recent Location", "Failed to truncate recent list. List may continue to grow.");
+//        }
+//    }
     
     
 }

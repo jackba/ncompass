@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;
 
-public class NCompass extends Activity
+public class TargetCompassActivity extends Activity
 {
     @Override
     public void onCreate(Bundle icicle)
