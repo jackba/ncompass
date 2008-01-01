@@ -30,20 +30,13 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             SQL_SELECT_LISTS = "Lists" ;
             SQL_SELECT_INTENTS = "Intents" ;
             
-            SQL_SELECT_PLACES = "(SELECT c.list AS listId, p._id AS placeId, p.lat AS lat, p.lon as lon, p.alt as alt, c.date AS updated, c._id AS itemId, p.title as title FROM Places p INNER JOIN PlaceLists c ON p._id=c.place) AS t1";
+            SQL_SELECT_PLACES = "(SELECT c.list AS list_id, p._id AS place_id, p.lat AS lat, " +
+                " p.lon as lon, p.alt as alt, c.date AS updated, c._id AS _id, p.title as title " + 
+                " FROM Places p INNER JOIN PlaceLists c ON p._id=c.place ORDER BY c.list ASC, c.date DESC) AS t1";
             
             
             
-            SQL_DELETE_CLEANUP = "DELETE FROM PlaceList " + 
-            " WHERE _id < (" +
-            " SELECT MIN(_id)" +
-            " FROM (" + " SELECT place " +
-            " FROM PlaceLists c " +
-            " INNER JOIN Lists l " +
-            " ON c.list = l._id " +
-            " WHERE l._id=? " +
-            " ORDER BY c.date " +
-            " LIMIT l.capactity ))";
+
         }
         
         
@@ -157,7 +150,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
         
         
 
-        private long getTimeStamp(String date)
+        private static long getTimeStamp(String date)
         {
             try
             {
@@ -172,27 +165,30 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
         }
         
         
-        public void printCursor(Cursor cursor)
+        public static void printCursor(Cursor cursor)
         {
             printCursor(cursor, "");
         }
         
         
-        public void printCursor(Cursor cursor, String message)
+        public static void printCursor(Cursor cursor, String message)
         {
             Log.w("PlaceBookDB", "printing cursor with " + cursor.count() + " records: " + message);
             String[] cols = cursor.getColumnNames();
-            for (int j = 0; j < cursor.count(); j++)
+            StringBuffer buffer = new StringBuffer();
+
+            for (cursor.first(); cursor.next(); cursor.isAfterLast())
             {
-                String print = "";
-                cursor.moveTo(j);
-                
                 for (int k = 0; k < cols.length; k++)
                 {
-                    print += cols[k] + "=" + cursor.getString(k) + ", ";
+                    buffer.append(cols[k]);
+                    buffer.append("=");
+                    buffer.append(cursor.getString(k));
+                    buffer.append(", ");
                 }
-                            
-                Log.w("Place List", print);
+                
+                Log.w("Place List", buffer.toString());
+                buffer.setLength(0);
             }
         }
     

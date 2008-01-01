@@ -18,8 +18,15 @@ import android.location.LocationProvider;
  */
 public class LocationTracker
 {
+    static final long ACCEPTABLE_AGE_THRESHOLD = 500;
+    
     LocationManager locationManager;
     LocationProvider locationProvider;
+    
+    Location currentLocation = null;
+    long lastCheckedTime = 0;
+    
+    
     
     public LocationTracker(Context c)
     {
@@ -31,23 +38,27 @@ public class LocationTracker
         for (int i = 0; i < list.size(); i++)
         {
             locationProvider = list.get(i);
-//            logProvider(locationProvider);
         }
+        
         Stopwatch.stop("find provider");
     }
     
 
     public Location getCurrentLocation()
     {
-        Stopwatch.start();
-        if (locationProvider != null)
+        long currentTime = System.currentTimeMillis();
+
+        if (currentTime - lastCheckedTime < ACCEPTABLE_AGE_THRESHOLD && locationProvider != null)
         {
-            Location l = locationManager.getCurrentLocation(locationProvider.getName());
-//            logLocation(l);
+            Stopwatch.start();
+
+            currentLocation = locationManager.getCurrentLocation(locationProvider.getName());
+            lastCheckedTime = currentTime;
+            
             Stopwatch.stop("get location");
-            return l;
         }
-        return null;
+        
+        return currentLocation;
     }
 
 //    private void logProvider(LocationProvider p)
