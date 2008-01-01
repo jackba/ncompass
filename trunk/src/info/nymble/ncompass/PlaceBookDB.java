@@ -1,6 +1,11 @@
 package info.nymble.ncompass;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.content.ContentProviderDatabaseHelper;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
@@ -8,7 +13,7 @@ import android.util.Log;
 public class PlaceBookDB extends ContentProviderDatabaseHelper
 {
         static final String FILE_NAME = "placebook.db";
-        static final int VERSION = 11;
+        static final int VERSION = 19;
         
         static final String[] EMPTY_ARGS = new String[0];
         
@@ -25,7 +30,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             SQL_SELECT_LISTS = "Lists" ;
             SQL_SELECT_INTENTS = "Intents" ;
             
-            SQL_SELECT_PLACES = "Places";
+            SQL_SELECT_PLACES = "(SELECT c.list AS listId, p._id AS placeId, p.lat AS lat, p.lon as lon, p.alt as alt, c.date AS updated, c._id AS itemId, p.title as title FROM Places p INNER JOIN PlaceLists c ON p._id=c.place) AS t1";
             
             
             
@@ -49,7 +54,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
         {
             String sql = "CREATE TABLE IF NOT EXISTS Places ( " + 
             " _id INTEGER PRIMARY KEY AUTOINCREMENT, lat TEXT NOT NULL, " +
-            " lon TEXT NOT NULL, alt TEXT NOT NULL DEFAULT 0, created TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+            " lon TEXT NOT NULL, alt TEXT NOT NULL DEFAULT 0, created INTEGER DEFAULT CURRENT_TIMESTAMP, " +
             " title VARCHAR(255), pic VARCHAR(255), contact VARCHAR(255), UNIQUE (lat, lon, alt) );";
             db.execSQL(sql);
             
@@ -60,8 +65,8 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             db.execSQL(sql);
             
             sql = "CREATE TABLE IF NOT EXISTS PlaceLists (" +
-            " place INTEGER NOT NULL, list INTEGER NOT NULL, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-            " info VARCHAR(255), PRIMARY KEY (place, list) );";
+            " _id INTEGER PRIMARY KEY AUTOINCREMENT, place INTEGER NOT NULL, list INTEGER NOT NULL, " + 
+            " date INTEGER DEFAULT CURRENT_TIMESTAMP, info VARCHAR(255) );";
             db.execSQL(sql);
             
             sql = "CREATE TABLE IF NOT EXISTS Intents (" +
@@ -89,8 +94,47 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             e.bindDouble(1, -0.097160); e.bindDouble(2, 34.743662); e.bindDouble(3, 0); e.bindString(4, "kisumu on lake victoria"); e.execute();
             e.bindDouble(1, 55.922265); e.bindDouble(2, -3.177248); e.bindDouble(3, 0); e.bindString(4, "Edinburgh, U"); e.execute();
             e.bindDouble(1, 37.827769); e.bindDouble(2, -122.481862); e.bindDouble(3, 0); e.bindString(4, "Golden Gate Bridge"); e.execute();
+
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (1, 1, " + getTimeStamp("2008-01-01 08:55:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (4, 1, " + getTimeStamp("2007-06-06 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 1, " + getTimeStamp("2007-06-03 19:15:45") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (6, 1, " + getTimeStamp("2007-06-02 19:42:55") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (1, 2, " + getTimeStamp("2007-12-24 09:16:32") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (3, 2, " + getTimeStamp("2007-07-04 04:41:19") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (2, 2, " + getTimeStamp("2006-03-15 13:19:39") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (1, 2, " + getTimeStamp("2006-02-20 14:22:20") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (4, 3, " + getTimeStamp("2007-06-06 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 3, " + getTimeStamp("2007-06-03 19:15:45") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (6, 3, " + getTimeStamp("2007-05-28 20:20:28") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (4, 3, " + getTimeStamp("2007-05-27 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (1, 3, " + getTimeStamp("2007-04-06 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 3, " + getTimeStamp("2007-01-01 08:55:06") + ") ";   
+            db.execSQL(sql);
+            
+            
+            
+            printCursor(db.query("SELECT * FROM Places", EMPTY_ARGS), "Places Table");
+            printCursor(db.query("SELECT * FROM Lists", EMPTY_ARGS), "Lists Table");
+            printCursor(db.query("SELECT * FROM PlaceLists", EMPTY_ARGS), "PlaceLists Table");
+            
         }
 
+        
+        
+        
         
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -103,6 +147,53 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             db.execSQL("DROP TABLE IF EXISTS Intents");
             
             onCreate(db);
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+
+        private long getTimeStamp(String date)
+        {
+            try
+            {
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date d = f.parse(date);
+                
+                return d.getTime();
+            } catch (ParseException e)
+            {
+                return 0;
+            }
+        }
+        
+        
+        public void printCursor(Cursor cursor)
+        {
+            printCursor(cursor, "");
+        }
+        
+        
+        public void printCursor(Cursor cursor, String message)
+        {
+            Log.w("PlaceBookDB", "printing cursor with " + cursor.count() + " records: " + message);
+            String[] cols = cursor.getColumnNames();
+            for (int j = 0; j < cursor.count(); j++)
+            {
+                String print = "";
+                cursor.moveTo(j);
+                
+                for (int k = 0; k < cols.length; k++)
+                {
+                    print += cols[k] + "=" + cursor.getString(k) + ", ";
+                }
+                            
+                Log.w("Place List", print);
+            }
         }
     
 }
