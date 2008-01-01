@@ -1,7 +1,6 @@
 package info.nymble.ncompass;
 
 import info.nymble.ncompass.PlaceBook.Lists;
-import info.nymble.ncompass.PlaceBook.Places;
 import android.app.Activity;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -12,13 +11,22 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewInflate;
+import android.widget.AdapterView;
 import android.widget.Gallery;
 import android.widget.GalleryAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlaceListActivity extends Activity
 {
+    LocationTracker tracker = new LocationTracker(this);
+    Gallery g;
+    ListView list;
+    
+    PlaceListAdapter placeListAdapter;
+    
+    
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -26,58 +34,46 @@ public class PlaceListActivity extends Activity
         setDefaultKeyMode(SHORTCUT_DEFAULT_KEYS);
         setContentView(R.layout.list_gallery);
 
-        Cursor c = managedQuery(Lists.LISTS_URI, null, null, null);
-        Gallery g = (Gallery) findViewById(R.id.list_gallery);
-
-        Log.w("PlaceListActivity", "Cursor contains " + c.count());
-        g.setAdapter(new TextListAdapter(c, getViewInflate()));
+        g = (Gallery) findViewById(R.id.list_gallery);
+        list = (ListView) findViewById(R.id.list_contents);
 
 
-        ListView list = (ListView) findViewById(R.id.list_contents);
-        LocationTracker tracker = new LocationTracker(this);
-        String[] columns = new String[]{Places.ID, Places.CREATED, Places.LAT, Places.LON, Places.TITLE};
-        
-        c = managedQuery(Places.PLACES_URI, columns, null, null); 
-        list.setAdapter(new PlaceListAdapter(c, getViewInflate(), tracker));
-        
-        
-        
-        
-//        LocationTracker tracker = new LocationTracker(this);
-        
-        
-//        c.first();
-//        String[] cols = c.getColumnNames();
-//        
-//        for (int i = 0; i < c.count(); i++)
-//        {
-//            String values = "";
-//            for (int j = 0; j < cols.length; j++)
-//            {
-//                values += cols[j] + "=" + c.getString(j) + "; ";
-//            }
-//            
-//            Log.i("db printout",  values);
-//        }
-//        
-//        
-//        
-//        SimpleCursorAdapter adapter = new SimpleCursorAdapter
-//        (
-//                this, 
-//                R.layout.recent_location_entry, 
-//                c, 
-//                cols, 
-//                new int[]{R.id.list_id, R.id.list_title, R.id.list_is_sequence, R.id.list_is_system, R.id.list_capacity}
-//        );
-//        
-//        setListAdapter(adapter);
-        
-        
-        
-        
+        g.setAdapter(new TextListAdapter(this));
+        g.setOnItemSelectedListener(new SelectionChangeListener(this));
+
+        placeListAdapter =  new PlaceListAdapter(this, tracker, 1);
+        list.setAdapter(placeListAdapter);
     }
 
+    
+    
+    private class SelectionChangeListener implements OnItemSelectedListener
+    {
+        Activity activity;
+        
+        SelectionChangeListener(Activity a)
+        {
+            activity = a;
+        }
+
+        public void onItemSelected(AdapterView parent, View v, int position, final long id)
+        {
+            Log.w("Selection Change", "selection changed in gallery position=" + position + " id=" + id);
+            placeListAdapter.setList(id);
+        }
+
+        public void onNothingSelected(AdapterView arg0)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+    }
+    
+    
+    
+    
+    
+    
     
     private static class TextListAdapter implements GalleryAdapter
     {
@@ -87,12 +83,12 @@ public class PlaceListActivity extends Activity
         int nameColumn;
         
         
-        public TextListAdapter(Cursor c, ViewInflate i)
+        public TextListAdapter(Activity a)
         {
-            inflate = i;
-            cursor = c;
-            nameColumn = c.getColumnIndex("name");
-            idColumn = c.getColumnIndex("_id");
+            cursor =  a.managedQuery(Lists.LISTS_URI, null, null, null);
+            inflate = a.getViewInflate();
+            nameColumn = cursor.getColumnIndex("name");
+            idColumn = cursor.getColumnIndex("_id");
         }
         
         

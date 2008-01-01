@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NCompass</string>
-    <string name="recent_locations_title">Recent Locations</string>
+    <string name="recent_locations_title">My Places</string>
     <string name="recent_view_list">Recent Locations</string>
     <string name="empty_list">No Recent Locations</string>
     

@@ -1,8 +1,11 @@
 package info.nymble.ncompass;
 
+import info.nymble.ncompass.PlaceBook.Places;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import android.app.Activity;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -18,17 +21,35 @@ import android.widget.TextView;
 
 public class PlaceListAdapter implements ListAdapter
 {
+    static final String[] columns = new String[]{"itemId", "updated", Places.LAT, Places.LON, Places.TITLE, "listId"};
+
+    Activity activity;
     LocationTracker tracker;
     Cursor cursor;
     ViewInflate inflate;
     
-    public PlaceListAdapter(Cursor c, ViewInflate i, LocationTracker t)
+    
+    ContentObserver observer;
+    
+    
+    
+    public PlaceListAdapter(Activity a, LocationTracker t, long listId)
     {
-        this.cursor = c;
-        this.inflate = i;
+        Log.w("PlaceListAdapter", "printing list for listId=" + listId);
+        this.activity = a;
+        this.cursor = a.managedQuery(Places.PLACES_URI, columns, "listId=" + listId, null);
+        this.inflate = a.getViewInflate();
         this.tracker = t;
     }
     
+    
+    
+    
+    public void setList(long id)
+    {
+        this.cursor = activity.managedQuery(Places.PLACES_URI, columns, "listId=" + id, null);
+        observer.onChange(true);
+    }
 
     
     
@@ -51,13 +72,13 @@ public class PlaceListAdapter implements ListAdapter
     public Object getItem(int position)
     {
         cursor.moveTo(position);
-        return cursor.getString(cursor.getColumnIndex(Recent.CREATED));
+        return cursor.getLong(0);
     }
 
     public long getItemId(int position)
     {
         cursor.moveTo(position);
-        return cursor.getLong(cursor.getColumnIndex(Recent.ID));
+        return cursor.getLong(0);
     }
 
     public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
@@ -74,15 +95,7 @@ public class PlaceListAdapter implements ListAdapter
         TextView titleText = (TextView)v.findViewById(R.id.place_title);
         
         cursor.moveTo(position);
-        
-        String[] cols = cursor.getColumnNames();
-        String print = "";
-        for (int i = 0; i < cols.length; i++)
-        {
-            print += cols[i] + "=" + cursor.getString(i) + ", ";
-        }
-        Log.w("Place List", print);
-        
+                
         dateText.setText(getDate(cursor.getLong(1)));
         distanceText.setText(getDistance(cursor.getString(2), cursor.getString(3)));
         titleText.setText(cursor.getString(4));
@@ -122,24 +135,30 @@ public class PlaceListAdapter implements ListAdapter
     }
     
     
-
-    public void registerContentObserver(ContentObserver observer)
-    {
-    }
-
-    public void registerDataSetObserver(DataSetObserver observer)
-    {
-    }
-
     public boolean stableIds()
     {
         return true;
+    }
+
+    
+    
+    
+    
+    public void registerContentObserver(ContentObserver observer)
+    {
+        this.observer = observer;
     }
 
     public void unregisterContentObserver(ContentObserver observer)
     {
     }
 
+    
+    public void registerDataSetObserver(DataSetObserver observer)
+    {
+    }
+
+    
     public void unregisterDataSetObserver(DataSetObserver arg0)
     {
     }

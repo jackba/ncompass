@@ -13,10 +13,7 @@ public class RecentListActivity extends ListActivity
 
         setDefaultKeyMode(SHORTCUT_DEFAULT_KEYS);
 
-        String[] columns = new String[]{Places.ID, Places.CREATED, Places.LAT, Places.LON, Places.TITLE};
-        Cursor c = managedQuery(Places.PLACES_URI, columns, null, null);
         LocationTracker tracker = new LocationTracker(this);
-        
-        setListAdapter(new PlaceListAdapter(c, getViewInflate(), tracker));
+        setListAdapter(new PlaceListAdapter(this, tracker, 1));
     }   
 }
