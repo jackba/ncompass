@@ -187,7 +187,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
                     buffer.append(", ");
                 }
                 
-                Log.w("Place List", buffer.toString());
+                Log.w(null, buffer.toString());
                 buffer.setLength(0);
             }
         }

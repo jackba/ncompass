@@ -1,5 +1,6 @@
 package info.nymble.ncompass;
 
+import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Lists;
 import android.app.Activity;
 import android.database.ContentObserver;
@@ -58,8 +59,12 @@ public class PlaceListActivity extends Activity
 
         public void onItemSelected(AdapterView parent, View v, int position, final long id)
         {
+            Stopwatch.start();
+            
             Log.w("Selection Change", "selection changed in gallery position=" + position + " id=" + id);
             placeListAdapter.setList(id);
+            
+            Stopwatch.stop("Finished selection");
         }
 
         public void onNothingSelected(AdapterView arg0)

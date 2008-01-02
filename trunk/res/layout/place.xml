@@ -1,44 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<TableLayout
-    id="@+id/menu"
+
+<info.nymble.ncompass.SelectionExpandingLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="100dip"
-    android:stretchColumns="1"
-    android:paddingTop="4dip">
+    android:paddingBottom="4dip"
+	android:orientation="vertical">
 	
-    <TableRow>
-        <TextView
-        	id="@+id/place_date"
-            android:text="@string/date"
-            android:padding="3dip" />
-        <TextView
-        	id="@+id/place_distance"
-            android:text="@string/distance"
-            android:textAlign="end"
-            android:padding="3dip" />
-    </TableRow>
-    
-    <TableRow android:paddingBottom="2dip">
-        <TextView
-        	id="@+id/place_title"
-            android:text="@string/title"
-            android:padding="3dip"
-            android:textAlign="center" />
-        <ImageView
-        	android:adjustViewBounds="true"
-            android:src="@drawable/beach"
-            android:scaleType="fitEnd"
-            android:maxHeight="30px"
-            />
-    </TableRow>
-     
-    
-    <View 
-    	android:background="#AAAAAAAA"
-    	android:layout_height="1px"
-    	 />
-</TableLayout>
 
+	<TableLayout 
+		android:stretchColumns="1"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		
+		<View 
+	    	android:background="#AAAAAAAA"
+	    	android:layout_height="1px"
+	    	 />
+	    	 
+	    <TableRow>
+	        <TextView
+	        	id="@+id/place_date"
+	            android:text="@string/date"
+	            android:padding="3dip" />
+	        <TextView
+	        	id="@+id/place_distance"
+	            android:text="@string/distance"
+	            android:textAlign="end"
+	            android:padding="3dip" />
+	    </TableRow>
+	</TableLayout>
+	
+	<TableLayout android:stretchColumns="1"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content" 
+		android:paddingLeft="4dip">
+	    
+	    <TableRow 
+	    	android:paddingBottom="2dip" 
+	    	id="@+id/place_row_2" >
+	        
+	        
+	        <TextView
+	        	id="@+id/place_title"
+	            android:text="@string/title"
+	            android:padding="3dip"
+	            android:textAlign="center" />
+	        <ImageView
+	        	android:adjustViewBounds="true"
+	            android:src="@drawable/beach"
+	            android:scaleType="fitEnd"
+	            android:maxHeight="30px"
+	            />
+		 </TableRow>
+	</TableLayout>
+</info.nymble.ncompass.SelectionExpandingLayout>
 
