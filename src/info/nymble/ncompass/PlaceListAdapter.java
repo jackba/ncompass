@@ -1,21 +1,26 @@
 package info.nymble.ncompass;
 
+import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Places;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.location.Location;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewInflate;
 import android.widget.ListAdapter;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
@@ -48,10 +53,10 @@ public class PlaceListAdapter implements ListAdapter
     public void setList(long id)
     {
         this.cursor = activity.managedQuery(Places.PLACES_URI, columns, "list_id=" + id, null);
-        
-        PlaceBookDB.printCursor(this.cursor, "selected list");
-        
         observer.onChange(true);
+
+//        PlaceBookDB.printCursor(this.cursor, "selected list");
+
     }
 
     
@@ -86,13 +91,20 @@ public class PlaceListAdapter implements ListAdapter
 
     public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
     {
-        return 0;
+        return currentSelection;
     }
 
+    
     public View getView(int position, View convertView, ViewGroup parent)
     {
+        if (convertView != null )
+        {
+            return convertView;
+        }
+        
         View v = inflate.inflate(R.layout.place, null, null);
-
+      
+        
         TextView dateText = (TextView)v.findViewById(R.id.place_date);
         TextView distanceText = (TextView)v.findViewById(R.id.place_distance);
         TextView titleText = (TextView)v.findViewById(R.id.place_title);
@@ -106,13 +118,24 @@ public class PlaceListAdapter implements ListAdapter
         return v;
     }
     
+    
+    
+    
+    
+       
+    
+    
+    
     private String getDate(long date)
     {
-        SimpleDateFormat f = new SimpleDateFormat();
-        Date d = new Date(date);
-        
-        return f.format(d);
+        return Format.formatDate(date);
     }
+    
+    
+    
+    
+    
+    
     
     private String getDistance(String lat, String lon)
     {
@@ -122,16 +145,7 @@ public class PlaceListAdapter implements ListAdapter
         l.setLatitude(Double.parseDouble(lat));
         l.setLongitude(Double.parseDouble(lon));
 
-        double d = l.distanceTo(here);
-        
-        if (d > 1000)
-        {
-            return "" + (long)(d/1000) + "Km";
-        }
-        else
-        {
-            return "" + (long)(d) + "m";
-        }
+        return Format.formatDistance(l.distanceTo(here));
     }
     
     
@@ -162,4 +176,11 @@ public class PlaceListAdapter implements ListAdapter
     public void unregisterDataSetObserver(DataSetObserver arg0)
     {
     }
+    
+    
+    
+    
+    
+    
+
 }

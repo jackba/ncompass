@@ -23,7 +23,7 @@ public class LocationTracker
     LocationManager locationManager;
     LocationProvider locationProvider;
     
-    Location currentLocation = null;
+    Location currentLocation = new Location();
     long lastCheckedTime = 0;
     
     
@@ -48,7 +48,7 @@ public class LocationTracker
     {
         long currentTime = System.currentTimeMillis();
 
-        if (currentTime - lastCheckedTime < ACCEPTABLE_AGE_THRESHOLD && locationProvider != null)
+        if (currentTime - lastCheckedTime > ACCEPTABLE_AGE_THRESHOLD && locationProvider != null)
         {
             Stopwatch.start();
 

@@ -13,7 +13,9 @@
     
 
 
+    	<activity class="DummyActivity"  android:label="Dummy Activity"/>
 
+        
     	<activity class="PlaceListActivity" 
         	android:label="@string/recent_locations_title">
             <intent-filter>
