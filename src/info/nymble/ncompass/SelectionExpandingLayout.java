@@ -17,6 +17,7 @@ public class SelectionExpandingLayout extends LinearLayout
     }
     
     
+    @SuppressWarnings("unchecked")
     public SelectionExpandingLayout(Context context, AttributeSet attrs, Map inflateParams)
     {
         super(context, attrs, inflateParams);

@@ -13,7 +13,7 @@ import android.util.Log;
 public class PlaceBookDB extends ContentProviderDatabaseHelper
 {
         static final String FILE_NAME = "placebook.db";
-        static final int VERSION = 19;
+        static final int VERSION = 20;
         
         static final String[] EMPTY_ARGS = new String[0];
         
@@ -116,7 +116,18 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             db.execSQL(sql);
             sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 3, " + getTimeStamp("2007-01-01 08:55:06") + ") ";   
             db.execSQL(sql);
-            
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (4, 3, " + getTimeStamp("2006-06-06 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 3, " + getTimeStamp("2006-06-03 19:15:45") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (6, 3, " + getTimeStamp("2006-05-28 20:20:28") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (4, 3, " + getTimeStamp("2006-05-27 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (1, 3, " + getTimeStamp("2006-04-06 11:45:06") + ") ";
+            db.execSQL(sql);
+            sql = "INSERT INTO PlaceLists (place, list, date) VALUES (5, 3, " + getTimeStamp("2006-01-01 08:55:06") + ") ";   
+            db.execSQL(sql);
             
             
             printCursor(db.query("SELECT * FROM Places", EMPTY_ARGS), "Places Table");

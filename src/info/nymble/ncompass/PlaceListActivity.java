@@ -57,6 +57,7 @@ public class PlaceListActivity extends Activity
             activity = a;
         }
 
+        @SuppressWarnings("unchecked")
         public void onItemSelected(AdapterView parent, View v, int position, final long id)
         {
             Stopwatch.start();
@@ -67,6 +68,7 @@ public class PlaceListActivity extends Activity
             Stopwatch.stop("Finished selection");
         }
 
+        @SuppressWarnings("unchecked")
         public void onNothingSelected(AdapterView arg0)
         {
             // TODO Auto-generated method stub
@@ -150,7 +152,7 @@ public class PlaceListActivity extends Activity
         
         public float getScale(boolean focused, int offset)
         {
-            return offset == 0 ? 1.5F : 0.75F;   
+            return offset == 0 ? 1.0F : 0.75F;   
         }
         
         public float getAlpha(boolean focused, int offset)

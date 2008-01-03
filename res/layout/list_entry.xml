@@ -6,5 +6,9 @@
 	android:padding="10dip"
     android:textStyle="bold"
     android:textColor="#FFFFFFFF"
-    android:selectedTextColor="#FFFF0000"
+    android:selectedTextColor="#FFE3202C"
+    android:shadowColor="#FFFFFFFF"
+    android:shadowDx="3"
+    android:width="100dip"
+    android:textAlign="center"
      />

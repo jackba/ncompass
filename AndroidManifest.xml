@@ -18,6 +18,7 @@
         
     	<activity class="PlaceListActivity" 
         	android:label="@string/recent_locations_title">
+        	
             <intent-filter>
                 <action android:value="android.intent.action.MAIN" />
                 <category android:value="android.intent.category.LAUNCHER" />
