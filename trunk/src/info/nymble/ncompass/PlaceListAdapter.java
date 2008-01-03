@@ -1,26 +1,17 @@
 package info.nymble.ncompass;
 
-import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Places;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
-
 import android.app.Activity;
-import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.location.Location;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewInflate;
 import android.widget.ListAdapter;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 

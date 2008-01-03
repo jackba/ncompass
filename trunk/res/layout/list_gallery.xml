@@ -15,6 +15,11 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:gravity="bottom"
+		android:spinnerSelector="@drawable/gallery_selected_item"
 		android:background="@drawable/black_opaque_box"
 	/>
+	<!--
+		android:drawSelectorOnTop="true"
+		android:background="@drawable/white_box"
+	-->
 </RelativeLayout>
