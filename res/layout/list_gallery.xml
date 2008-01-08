@@ -9,14 +9,21 @@
 	<ListView id="@+id/list_contents"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+  	<TextView id="@+id/list_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="loading list contents..."
+        android:visibility="gone" />
+
+	    
 	    
 	<Gallery xmlns:android="http://schemas.android.com/apk/res/android" id="@+id/list_gallery"
 		android:layout_width="fill_parent"	
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:gravity="bottom"
+		android:background="@drawable/gallery_bg"
 		android:spinnerSelector="@drawable/gallery_selected_item"
-		android:background="@drawable/black_opaque_box"
 	/>
 	<!--
 		android:drawSelectorOnTop="true"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<info.nymble.ncompass.BackgroundedTextView xmlns:android="http://schemas.android.com/apk/res/android"
 	id="@+id/list_title"
 	android:padding="10dip"
     android:textStyle="bold"
@@ -10,5 +10,8 @@
     android:shadowColor="#FFFFFFFF"
     android:shadowDx="3"
     android:width="100dip"
+    android:height="40dip"
     android:textAlign="center"
      />
+<!--
+    android:background="@drawable/gallery_selected_item"-->
