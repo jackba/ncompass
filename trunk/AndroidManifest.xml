@@ -16,34 +16,28 @@
     	<activity class="DummyActivity"  android:label="Dummy Activity"/>
 
         
+		<activity class="AddListActivity" 
+        	android:label="New List"
+        	android:theme="@style/Theme.Black">
+        	
+            <intent-filter android:label="new_list">
+                <action android:value="android.intent.action.ADD" />
+                <category android:value="android.intent.category.DEFAULT" />
+                <type android:value="vnd.android.cursor.dir/vnd.info.nymble.location" />
+            </intent-filter>
+        </activity>
+        
+        
+        
     	<activity class="PlaceListActivity" 
-        	android:label="@string/recent_locations_title">
+        	android:label="@string/recent_locations_title"
+        	android:theme="@style/Theme.Black">
         	
             <intent-filter>
                 <action android:value="android.intent.action.MAIN" />
                 <category android:value="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-    	
- <!--
-    	<activity class="RecentListActivity" 
-        	android:label="@string/recent_locations_title"
-        	android:theme="@style/Theme.Black"
-        	>
-
-            <intent-filter>
-                <action android:value="android.intent.action.MAIN" />
-                <category android:value="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            
-            <intent-filter android:label="@string/recent_view_list">
-                <action android:value="android.intent.action.VIEW" />
-                <category android:value="android.intent.category.DEFAULT" />
-                <type android:value="vnd.android.cursor.dir/vnd.info.nymble.location" />
-            </intent-filter>
-        </activity>
--->
 
         <activity class="TargetCompassActivity" 
         	android:label="@string/app_name"
@@ -53,8 +47,15 @@
                 <category android:value="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+   
+   
+    	
+ <!--
+            <intent-filter android:label="@string/recent_view_list">
+                <action android:value="android.intent.action.VIEW" />
+                <category android:value="android.intent.category.DEFAULT" />
+                <type android:value="vnd.android.cursor.dir/vnd.info.nymble.location" />
+            </intent-filter>
+-->
     </application>
-
-
-
 </manifest> 

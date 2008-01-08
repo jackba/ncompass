@@ -11,6 +11,6 @@ public class DummyActivity extends Activity
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        this.setContentView(R.layout.place);
+        this.setContentView(R.layout.list_new);
     }
 }

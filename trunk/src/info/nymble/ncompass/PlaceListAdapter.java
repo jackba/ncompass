@@ -1,10 +1,12 @@
 package info.nymble.ncompass;
 
+import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Places;
+
+import java.util.ArrayList;
+
 import android.app.Activity;
-import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.DataSetObserver;
 import android.location.Location;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -15,39 +17,46 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
-public class PlaceListAdapter implements ListAdapter
+public class PlaceListAdapter extends ObserverManager implements ListAdapter
 {
-    static final String[] columns = new String[]{"_id", "updated", Places.LAT, Places.LON, Places.TITLE, "list_id"};
+    static final String[] columns = new String[]{"_id", Places.LAT, Places.LON, Places.ALT, "updated", Places.TITLE, "list_id"};
 
+
+    ArrayList<Place> places = new ArrayList<Place>();
+    
     Activity activity;
     LocationTracker tracker;
-    Cursor cursor;
     ViewInflate inflate;
     
     
-    ContentObserver observer;
-    
-    
+
     
     public PlaceListAdapter(Activity a, LocationTracker t, long listId)
     {
-        Log.w("PlaceListAdapter", "printing list for listId=" + listId);
         this.activity = a;
-        this.cursor = a.managedQuery(Places.PLACES_URI, columns, "list_id=" + listId, null);
         this.inflate = a.getViewInflate();
         this.tracker = t;
+        
+//        setList(listId);
     }
     
     
     
     
-    public void setList(long id)
+    public void setList(final long id)
     {
-        this.cursor = activity.managedQuery(Places.PLACES_URI, columns, "list_id=" + id, null);
-        observer.onChange(true);
+        Cursor c = activity.managedQuery(Places.PLACES_URI, columns, "list_id=" + id, null);
+        
+        places.clear();
+        loadDataFromCursor(c, places);
 
-//        PlaceBookDB.printCursor(this.cursor, "selected list");
-
+//        onChanged();
+//        new Thread()
+//        {
+//            public void run()
+//            {
+//            }
+//        }.start();
     }
 
     
@@ -65,48 +74,50 @@ public class PlaceListAdapter implements ListAdapter
 
     public int getCount()
     {
-        return cursor.count();
+        return places.size();
     }
 
     public Object getItem(int position)
     {
-        cursor.moveTo(position);
-        return cursor.getLong(0);
+        return getItemId(position); //places.get(position);
     }
 
     public long getItemId(int position)
     {
-        cursor.moveTo(position);
-        return cursor.getLong(0);
+        return places.get(position).id;
     }
 
     public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
     {
+        Log.w(null, "getNewSelectionForKey:  currentSelection=" + currentSelection + " keyCode=" + keyCode);
         return currentSelection;
     }
 
+    public boolean stableIds()
+    {
+        return true;
+    }
     
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        if (convertView != null )
+        Log.w(null, "getView:  position=" + position);
+        if (convertView == null )
         {
-            return convertView;
+            Log.w(null, "rebuilding view");
+            convertView = inflate.inflate(R.layout.place, null, null);
+            
+            TextView dateText = (TextView)convertView.findViewById(R.id.place_date);
+            TextView distanceText = (TextView)convertView.findViewById(R.id.place_distance);
+            TextView titleText = (TextView)convertView.findViewById(R.id.place_title);
+            
+            Place p = places.get(position);
+            
+            dateText.setText(p.date);
+            distanceText.setText(getDistance(p.location));
+            titleText.setText(p.title);
         }
         
-        View v = inflate.inflate(R.layout.place, null, null);
-      
-        
-        TextView dateText = (TextView)v.findViewById(R.id.place_date);
-        TextView distanceText = (TextView)v.findViewById(R.id.place_distance);
-        TextView titleText = (TextView)v.findViewById(R.id.place_title);
-        
-        cursor.moveTo(position);
-                
-        dateText.setText(getDate(cursor.getLong(1)));
-        distanceText.setText(getDistance(cursor.getString(2), cursor.getString(3)));
-        titleText.setText(cursor.getString(4));
-        
-        return v;
+        return convertView;
     }
     
     
@@ -114,64 +125,55 @@ public class PlaceListAdapter implements ListAdapter
     
     
        
-    
-    
-    
-    private String getDate(long date)
+    private void loadDataFromCursor(Cursor c, ArrayList<Place> places)
     {
-        return Format.formatDate(date);
+        Stopwatch.start();
+        for (c.first(); !c.isAfterLast(); c.next())
+        {
+            Place p = new Place(c.getLong(0), 
+                    Double.parseDouble(c.getString(1)), 
+                    Double.parseDouble(c.getString(2)), 
+                    Double.parseDouble(c.getString(3)));
+            
+            p.date = Format.formatDate(c.getLong(4));
+            p.title = c.getString(5);
+            
+            places.add(p);
+        }
+        Stopwatch.stop("Loaded place data from cursor");
     }
     
     
-    
-    
-    
-    
-    
-    private String getDistance(String lat, String lon)
+    private String getDistance(Location l)
     {
         Location here = tracker.getCurrentLocation();
-        Location l = new Location();
-        
-        l.setLatitude(Double.parseDouble(lat));
-        l.setLongitude(Double.parseDouble(lon));
 
         return Format.formatDistance(l.distanceTo(here));
     }
     
     
-    public boolean stableIds()
-    {
-        return true;
-    }
+
 
     
     
     
-    
-    public void registerContentObserver(ContentObserver observer)
+    private static class Place
     {
-        this.observer = observer;
-    }
+        long id;
+        Location location;
+        String date;
+        String title;
+        String picture;
+        
+        public Place(long id, double lat, double lon, double alt)
+        {
+            this.id = id;
+            this.location = new Location();
+            this.location.setLatitude(lat);
+            this.location.setLongitude(lon);
+            this.location.setAltitude(alt);
+        }
 
-    public void unregisterContentObserver(ContentObserver observer)
-    {
     }
-
-    
-    public void registerDataSetObserver(DataSetObserver observer)
-    {
-    }
-
-    
-    public void unregisterDataSetObserver(DataSetObserver arg0)
-    {
-    }
-    
-    
-    
-    
-    
-    
 
 }

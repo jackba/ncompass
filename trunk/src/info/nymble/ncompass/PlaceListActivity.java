@@ -2,13 +2,19 @@ package info.nymble.ncompass;
 
 import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Lists;
+
+import java.util.ArrayList;
+
 import android.app.Activity;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewInflate;
@@ -21,9 +27,15 @@ import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlaceListActivity extends Activity
 {
+    final Handler handler = new Handler();
+
+    
     LocationTracker tracker = new LocationTracker(this);
     Gallery g;
     ListView list;
+    TextView loading;
+    
+    
     
     PlaceListAdapter placeListAdapter;
     
@@ -37,6 +49,7 @@ public class PlaceListActivity extends Activity
 
         g = (Gallery) findViewById(R.id.list_gallery);
         list = (ListView) findViewById(R.id.list_contents);
+        loading = (TextView) findViewById(R.id.list_loading);
 
 
         g.setAdapter(new TextListAdapter(this));
@@ -44,8 +57,34 @@ public class PlaceListActivity extends Activity
 
         placeListAdapter =  new PlaceListAdapter(this, tracker, 1);
         list.setAdapter(placeListAdapter);
+        
+        
+        
     }
 
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        final Intent intent = new Intent(this, AddListActivity.class);
+
+        menu.add(1, 1, "New List", new Runnable()
+        {
+            public void run()
+            {
+                startSubActivity(intent, 1);
+            }
+        }
+        );
+        return true;
+    }
+    
+    
+    
+    
+    
+    
+    
     
     
     private class SelectionChangeListener implements OnItemSelectedListener
@@ -60,12 +99,30 @@ public class PlaceListActivity extends Activity
         @SuppressWarnings("unchecked")
         public void onItemSelected(AdapterView parent, View v, int position, final long id)
         {
-            Stopwatch.start();
+//            Stopwatch.start();
+//            Stopwatch.stop("Finished selection");
             
             Log.w("Selection Change", "selection changed in gallery position=" + position + " id=" + id);
-            placeListAdapter.setList(id);
+            list.setVisibility(View.GONE);
+            loading.setVisibility(View.VISIBLE);
             
-            Stopwatch.stop("Finished selection");
+            
+            
+            new Thread()
+            {
+                
+                public void run()
+                {
+                    placeListAdapter.setList(id);
+                    handler.post(new Runnable()
+                    {
+                        public void run()
+                        {
+                            updateUI();
+                        }
+                    });
+                }
+            }.start();
         }
 
         @SuppressWarnings("unchecked")
@@ -78,42 +135,49 @@ public class PlaceListActivity extends Activity
     
     
     
-    
-    
-    
-    
-    private static class TextListAdapter implements GalleryAdapter
+    private void updateUI()
     {
+        placeListAdapter.onChanged();
+        loading.setVisibility(View.GONE);
+        list.setVisibility(View.VISIBLE);
+        list.takeFocus(View.FOCUS_FORWARD);
+    }
+    
+    
+    
+    private static class TextListAdapter extends ObserverManager implements GalleryAdapter
+    {
+        ArrayList<ContentObserver> contentObservers = new ArrayList<ContentObserver>();
+        ArrayList<DataSetObserver> datasetObservers = new ArrayList<DataSetObserver>();
+        
+        Activity activity;
         ViewInflate inflate;
-        Cursor cursor;
-        int idColumn;
-        int nameColumn;
+        long[] ids;
+        String[] names;
+        
         
         
         public TextListAdapter(Activity a)
         {
-            cursor =  a.managedQuery(Lists.LISTS_URI, null, null, null);
+            activity = a;
             inflate = a.getViewInflate();
-            nameColumn = cursor.getColumnIndex("name");
-            idColumn = cursor.getColumnIndex("_id");
+            loadData();
         }
         
         
         public int getCount()
         {
-            return cursor.count();
+            return ids.length;
         }
 
         public Object getItem(int position)
         {
-            cursor.moveTo(position);
-            return cursor.getString(nameColumn);
+            return names[position];
         }
 
         public long getItemId(int position)
         {
-            cursor.moveTo(position);
-            return cursor.getLong(idColumn);
+            return ids[position];
         }
 
         public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
@@ -123,13 +187,17 @@ public class PlaceListActivity extends Activity
 
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            String name = (String)getItem(position);
-            View v = inflate.inflate(R.layout.list_entry, null, null);
-            TextView titleText = (TextView)v.findViewById(R.id.list_title);
+            if ( convertView == null ) 
+            {
+                convertView = inflate.inflate(R.layout.list_entry, null, null);
+                
+                String name = (String)getItem(position);
+                TextView titleText = (TextView)convertView.findViewById(R.id.list_title);
+                
+                titleText.setText(name);
+            }
 
-            titleText.setText(name);
-                       
-            return v;
+            return convertView;
         }
 
         public boolean stableIds()
@@ -164,22 +232,31 @@ public class PlaceListActivity extends Activity
         
         
         
-        public void registerContentObserver(ContentObserver arg0)
-        {
-        }
 
-        public void registerDataSetObserver(DataSetObserver arg0)
+        
+        
+        
+        
+        private void loadData()
         {
-        }
-
-
-        public void unregisterContentObserver(ContentObserver observer)
-        {
-        }
-
-        public void unregisterDataSetObserver(DataSetObserver arg0)
-        {
+            Cursor cursor =  activity.managedQuery(Lists.LISTS_URI, null, null, null);
             
+            int nameColumn = cursor.getColumnIndex("name");
+            int idColumn = cursor.getColumnIndex("_id");
+            int records = cursor.count();
+            
+            ids = new long[records];
+            names = new String[records];
+            
+            if (cursor.first())
+            {                
+                for (int i = 0; i < records; i++)
+                {
+                    ids[i] = cursor.getLong(idColumn);
+                    names[i] = cursor.getString(nameColumn);
+                    cursor.next();
+                }
+            }
         }
     }
 }
