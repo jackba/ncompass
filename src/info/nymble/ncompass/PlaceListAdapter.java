@@ -27,17 +27,15 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     Activity activity;
     LocationTracker tracker;
     ViewInflate inflate;
-    
+    int listId;
     
 
     
-    public PlaceListAdapter(Activity a, LocationTracker t, long listId)
+    public PlaceListAdapter(Activity a, LocationTracker t)
     {
         this.activity = a;
         this.inflate = a.getViewInflate();
         this.tracker = t;
-        
-//        setList(listId);
     }
     
     
@@ -49,14 +47,6 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         
         places.clear();
         loadDataFromCursor(c, places);
-
-//        onChanged();
-//        new Thread()
-//        {
-//            public void run()
-//            {
-//            }
-//        }.start();
     }
 
     
@@ -103,18 +93,27 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         Log.w(null, "getView:  position=" + position);
         if (convertView == null )
         {
-            Log.w(null, "rebuilding view");
-            convertView = inflate.inflate(R.layout.place, null, null);
-            
-            TextView dateText = (TextView)convertView.findViewById(R.id.place_date);
-            TextView distanceText = (TextView)convertView.findViewById(R.id.place_distance);
-            TextView titleText = (TextView)convertView.findViewById(R.id.place_title);
-            
-            Place p = places.get(position);
-            
-            dateText.setText(p.date);
-            distanceText.setText(getDistance(p.location));
-            titleText.setText(p.title);
+        	Place p = places.get(position);
+        	
+        	if (p.view == null)
+        	{        		
+        		Log.w(null, "rebuilding view");
+        		convertView = inflate.inflate(R.layout.place, null, null);
+        		
+        		TextView dateText = (TextView)convertView.findViewById(R.id.place_date);
+        		TextView distanceText = (TextView)convertView.findViewById(R.id.place_distance);
+        		TextView titleText = (TextView)convertView.findViewById(R.id.place_title);
+
+        		dateText.setText(p.date);
+        		distanceText.setText(getDistance(p.location));
+        		titleText.setText(p.title);
+        		
+        		p.view = convertView;
+        	}
+        	else
+        	{
+        		convertView = p.view;
+        	}
         }
         
         return convertView;
@@ -164,6 +163,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         String date;
         String title;
         String picture;
+        View view;
         
         public Place(long id, double lat, double lon, double alt)
         {
