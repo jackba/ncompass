@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" 
-    android:layout_height="fill_parent"
-	android:paddingLeft="8dip"
-	android:paddingRight="8dip">
+    android:layout_height="fill_parent">
 	
-  <ListView id="@id/android:list"
+	<!--
+	<ListView id="@+id/list_contents"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
-  <TextView id="@id/android:empty"
+  	-->
+  	<TextView id="@+id/list_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/empty_list"/>
+        android:text="loading list contents..."
+        android:visibility="gone" />
 
-</LinearLayout>
+	    
+	    
+	<Gallery xmlns:android="http://schemas.android.com/apk/res/android" id="@+id/list_gallery"
+		android:layout_width="fill_parent"	
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:gravity="bottom"
+		android:background="@drawable/gallery_bg_hvga_l"
+	/>
+
+</RelativeLayout>

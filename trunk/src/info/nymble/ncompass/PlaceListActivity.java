@@ -1,11 +1,12 @@
 package info.nymble.ncompass;
 
-import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.PlaceBook.Lists;
 
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -31,13 +32,15 @@ public class PlaceListActivity extends Activity
 
     
     LocationTracker tracker = new LocationTracker(this);
-    Gallery g;
+    Gallery gallery;
     ListView list;
     TextView loading;
     
     
     
     PlaceListAdapter placeListAdapter;
+    
+    
     
     
     @Override
@@ -47,18 +50,16 @@ public class PlaceListActivity extends Activity
         setDefaultKeyMode(SHORTCUT_DEFAULT_KEYS);
         setContentView(R.layout.list_gallery);
 
-        g = (Gallery) findViewById(R.id.list_gallery);
+        gallery = (Gallery) findViewById(R.id.list_gallery);
         list = (ListView) findViewById(R.id.list_contents);
         loading = (TextView) findViewById(R.id.list_loading);
 
 
-        g.setAdapter(new TextListAdapter(this));
-        g.setOnItemSelectedListener(new SelectionChangeListener(this));
+        gallery.setAdapter(new TextListAdapter(this));
+        gallery.setOnItemSelectedListener(new SelectionChangeListener(this));
 
-        placeListAdapter =  new PlaceListAdapter(this, tracker, 1);
-        list.setAdapter(placeListAdapter);
-        
-        
+        placeListAdapter =  new PlaceListAdapter(this, tracker);
+        list.setAdapter(placeListAdapter);  
         
     }
 
@@ -66,18 +67,40 @@ public class PlaceListActivity extends Activity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        final Intent intent = new Intent(this, AddListActivity.class);
+        final Intent newListIntent = new Intent(this, AddListActivity.class);
 
         menu.add(1, 1, "New List", new Runnable()
         {
             public void run()
             {
-                startSubActivity(intent, 1);
+                startSubActivity(newListIntent, 1);
             }
         }
         );
+        
+        
+        menu.add(1, 2, "Delete List", new Runnable()
+        {
+            public void run()
+            {
+                removeList();
+            }
+        }
+        );
+        
         return true;
     }
+    
+    
+    private void removeList()
+    {
+    	String listId = String.valueOf(gallery.getSelectedItemId());
+        ContentResolver resolver = this.getContentResolver();
+        
+        Log.i(null, "removing list id=" + listId);
+        resolver.delete(Lists.LISTS_URI, "list=?", new String[]{listId});
+    }
+    
     
     
     
