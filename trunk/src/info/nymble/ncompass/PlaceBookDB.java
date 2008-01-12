@@ -133,7 +133,6 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             printCursor(db.query("SELECT * FROM Places", EMPTY_ARGS), "Places Table");
             printCursor(db.query("SELECT * FROM Lists", EMPTY_ARGS), "Lists Table");
             printCursor(db.query("SELECT * FROM PlaceLists", EMPTY_ARGS), "PlaceLists Table");
-            
         }
 
         

@@ -1,12 +1,13 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
+import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
 
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;

@@ -1,7 +1,10 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
 import info.nymble.measure.Stopwatch;
+import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Places;
+import info.nymble.ncompass.view.Format;
 
 import java.util.ArrayList;
 

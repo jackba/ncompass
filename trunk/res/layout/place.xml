@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<info.nymble.ncompass.SelectionExpandingLayout
+<info.nymble.ncompass.view.SelectionExpandingLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="100dip"
@@ -49,11 +49,11 @@
 	            android:textAlign="center" />
 	        <ImageView
 	        	android:adjustViewBounds="true"
-	            android:src="@drawable/beach"
+	            android:src="@drawable/no_picture_placeholder"
 	            android:scaleType="fitEnd"
 	            android:maxHeight="30px"
 	            />
 		 </TableRow>
 	</TableLayout>
-</info.nymble.ncompass.SelectionExpandingLayout>
+</info.nymble.ncompass.view.SelectionExpandingLayout>
 

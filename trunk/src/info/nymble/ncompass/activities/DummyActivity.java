@@ -1,9 +1,9 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
 
+import info.nymble.ncompass.R;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -22,7 +22,7 @@ public class DummyActivity extends Activity
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        this.setContentView(R.layout.recent_list);
+        this.setContentView(R.layout.list_gallery);
         
         
 

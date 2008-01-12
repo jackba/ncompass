@@ -1,8 +1,9 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.view;
 
 import info.nymble.measure.Stopwatch;
+import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.R;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -161,8 +162,8 @@ public class TargetCompass extends View
     @Override
     public boolean onMotionEvent(MotionEvent event)
     {
-        mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
-        mContext.startActivity(new Intent(Intent.VIEW_ACTION, Recent.CONTENT_URI));
+//        mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
+//        mContext.startActivity(new Intent(Intent.VIEW_ACTION, Recent.CONTENT_URI));
         this.invalidate();
         return true;
     }

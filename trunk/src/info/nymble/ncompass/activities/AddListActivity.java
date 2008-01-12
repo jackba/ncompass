@@ -1,5 +1,6 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
+import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
 import android.app.Activity;
 import android.content.ContentResolver;
