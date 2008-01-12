@@ -108,10 +108,10 @@ public class TargetCompass extends View
         Rect r = largestCenteredRectangle();
         Stopwatch.stop("determine center mass");
         
-        Stopwatch.start();
-        ring.setBounds(r);
-        ring.draw(canvas);
-        Stopwatch.stop("draw compass back");
+//        Stopwatch.start();
+//        ring.setBounds(r);
+//        ring.draw(canvas);
+//        Stopwatch.stop("draw compass back");
         
         Stopwatch.start();
         canvas.rotate(northR, this.getWidth()/2, this.getHeight()/2);

@@ -22,13 +22,13 @@ public class DummyActivity extends Activity
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        this.setContentView(R.layout.list_gallery);
+        this.setContentView(R.layout.recent_location_entry);
         
         
 
-	    Gallery g = (Gallery) findViewById(R.id.list_gallery);
-	    g.setAdapter(new ImageAdapter(this));
-//	    g.setSelectorSkin(getResources().getDrawable(R.drawable.gallery_selected_item));
+	    ImageView i = (ImageView) findViewById(R.id.image_id);
+	    i.setImageResource(R.drawable.icon_compass);
+	    
 	    
 	    Display d = this.getWindowManager().getDefaultDisplay();
 	    Log.w(null, "screen dimensions h=" + d.getHeight() + " w=" + d.getWidth() + " orient=" + d.getOrientation());

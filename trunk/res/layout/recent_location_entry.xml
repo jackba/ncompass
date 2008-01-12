@@ -6,6 +6,12 @@
 	android:paddingLeft="8dip"
 	android:paddingRight="8dip">
 	
+	<ImageView 
+		id="@+id/image_id"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"/>
+	
+	
     <TextView id="@+id/list_id"
 			android:text="-1"
 		    android:layout_width="40px"
