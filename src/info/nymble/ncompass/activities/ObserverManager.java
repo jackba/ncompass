@@ -1,4 +1,4 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
 import java.util.ArrayList;
 import java.util.Iterator;

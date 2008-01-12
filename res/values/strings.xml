@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NCompass</string>
-    <string name="recent_locations_title">My Places</string>
-    <string name="recent_view_list">Recent Locations</string>
+    <string name="app_name">Place Book</string>
+    
+        
+    <!-- Target Compass -->
+    <string name="target_compass_title">Target Compass</string>
+
+
+	<!-- Place book main view -->
+    <string name="placebook_title">Place Book</string>    
     <string name="empty_list">No Recent Locations</string>
-    
-    
-    
-    
-    <string name="title">Beach Cabin</string>
-    <string name="untitled">untitled</string>
+
+    <string name="title">untitled</string>
+    <string name="person">Jodi</string>
     <string name="date">Yesterday 3PM</string>
     <string name="distance">15.3 mi</string>
-    <string name="person">Jodi</string>
+
+
+
+    <!-- New List -->
+    <string name="new_list_title">Create New List</string>
+    <string name="new_list_ok_button">Create</string>
 </resources>

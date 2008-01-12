@@ -1,6 +1,7 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.activities;
 
 import info.nymble.measure.Stopwatch;
+import info.nymble.ncompass.view.TargetCompass;
 import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;

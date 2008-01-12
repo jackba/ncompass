@@ -1,4 +1,4 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.view;
 import java.util.Map;
 
 import android.content.Context;

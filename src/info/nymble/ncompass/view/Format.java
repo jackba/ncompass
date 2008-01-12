@@ -1,4 +1,4 @@
-package info.nymble.ncompass;
+package info.nymble.ncompass.view;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
