@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+    
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent">
+	
+	<info.nymble.ncompass.view.TargetCompass
+		xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="fill_parent"
+	    android:layout_height="100dip"
+	    android:paddingBottom="4dip"
+	    id="@+id/compass" />
+	
+
+	    
+	<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="fill_parent"	
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:gravity="bottom"
+		android:text="Hello Compass"
+	/>
+</RelativeLayout>
+
+
