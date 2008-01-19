@@ -41,8 +41,7 @@ public class LocationTracker
     
     
     private Location currentLocation = new Location();
-    private long lastCheckedTime = 0;
-    
+
     
     
     
@@ -68,20 +67,17 @@ public class LocationTracker
 
     public Location getCurrentLocation()
     {
-        long currentTime = System.currentTimeMillis();
-
-        if (currentTime - lastCheckedTime > ACCEPTABLE_AGE_THRESHOLD && locationProvider != null)
+        if (isLocationOutdated() && locationProvider != null)
         {
             Stopwatch.start();
-
             currentLocation = locationManager.getCurrentLocation(locationProvider.getName());
-            lastCheckedTime = currentTime;
-            
             Stopwatch.stop("get location");
         }
         
         return currentLocation;
     }
+
+    
 
 
     
@@ -90,9 +86,10 @@ public class LocationTracker
     {
     	started = true;
     	if (!listening && listeners.size() > 0)
-    	{	
-    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 0, intent);
+    	{
+    		Log.i(null, "Registering Location Tracking");
     		context.registerReceiver(intentReceiver, filter);
+    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 1, intent);
     		listening = true;
     	}
     }
@@ -102,6 +99,8 @@ public class LocationTracker
     	started = false;
     	if (listening)
     	{
+    		Log.i(null, "Unregistering Location Tracking");
+    		locationManager.removeUpdates(intent);
     		context.unregisterReceiver(intentReceiver);
     	}
     }
@@ -119,6 +118,11 @@ public class LocationTracker
     }
     
     
+    
+    
+    
+    
+    
     private void notifyObservers(Location l)
     {
 		for (Iterator<LocationListener> i = listeners.iterator(); i.hasNext();) 
@@ -128,7 +132,7 @@ public class LocationTracker
     }
     
     
-    public class LocationUpdateReceiver extends IntentReceiver 
+    private class LocationUpdateReceiver extends IntentReceiver 
     {
         @Override
         public void onReceiveIntent(Context context, Intent intent) 
@@ -137,27 +141,25 @@ public class LocationTracker
         } 
     }
 
-	void updateLocation(Intent intent) 
+	private void updateLocation(Intent intent) 
 	{
-		Location l = (Location)intent.getExtra("location");
-        long currentTime = System.currentTimeMillis();
-
-        if (currentTime - lastCheckedTime > ACCEPTABLE_AGE_THRESHOLD && locationProvider != null)
-        {
-        	Log.i(null, "Location update l=" + l.toString());
-            currentLocation = l;
-            lastCheckedTime = currentTime;
-            notifyObservers(l);
-        }
+		if (intent != null)
+		{			
+			Location l = (Location)intent.getExtra("location");
+			
+			if (l != null && isLocationOutdated())
+			{				
+				Log.i(null, "Location update l=" + l.toString());
+				currentLocation = l;
+				notifyObservers(l);
+			}
+		}
 	}
-    
-	
-	
-    
-    
-    
-    
-    
+
+    private boolean isLocationOutdated()
+    {
+    	return currentLocation == null || System.currentTimeMillis() - currentLocation.getTime() > ACCEPTABLE_AGE_THRESHOLD;
+    }
 
 //    private void logProvider(LocationProvider p)
 //    {
