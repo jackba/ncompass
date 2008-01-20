@@ -33,6 +33,7 @@ import android.view.View;
 public class TargetCompass extends View {
 	private final BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
 	private final BitmapDrawable needle = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_needle);
+	private final BitmapDrawable cover = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_cover);
 	private final String no_bearing_message = "Current Bearing Unknown";
 	private final String no_target_message = "No Target Set";
 	private final Paint error_message_paint = buildErrorPaint();
@@ -193,14 +194,16 @@ public class TargetCompass extends View {
 			canvas.save();
 			canvas.rotate(spinner.getNWSE(), cx, cy);
 			nwse.draw(canvas);
-			canvas.restore();
+			
 
 			if (target != null) 
 			{
 				canvas.rotate(spinner.getTarget(), cx, cy);
 				needle.draw(canvas);
+				canvas.restore();
 			} else 
 			{
+				canvas.restore();
 				canvas.drawText(no_target_message, cx, cy, error_message_paint);
 			}
 		} 
@@ -265,6 +268,26 @@ public class TargetCompass extends View {
 								  exceedsDifference (location.bearingTo(target), displayLocation.bearingTo(displayTarget)))
 						);
 		
+		Log.i(null, "invalidation step");
+		Log.i(null, "dl=" + displayLocation);
+		Log.i(null, "dt=" + displayTarget);
+		Log.i(null, "l=" + location);
+		Log.i(null, "t=" + target);
+		if (location != null)
+		{
+			Log.i(null, "bearing=" + location.getBearing());
+			if (target != null) Log.i(null, "bearingTo=" + location.bearingTo(target));
+		}
+		if (displayLocation != null)
+		{
+			Log.i(null, "display bearing=" + displayLocation.getBearing());
+			if (displayTarget != null) Log.i(null, "displayBearingTo=" + displayLocation.bearingTo(displayTarget));
+		}
+		
+		
+		
+		
+		
 		if (redraw)
 		{
 			Log.i(null, "redrawing compass");
@@ -278,7 +301,7 @@ public class TargetCompass extends View {
 	
 	private boolean exceedsDifference(float f1, float f2)
 	{
-		return Math.abs(f1) - Math.abs(f2) > this.degree_error_tolerance;
+		return Math.abs(f1 - f2) > this.degree_error_tolerance;
 	}
 	
 	
@@ -382,6 +405,10 @@ public class TargetCompass extends View {
 						initializedTarget = true;
 					}
 				}
+				int d = (int)(target_bearing - target_bearing_current) % 360;
+				if (d > 180) d -= 360;
+				if (d < -180) d += 360;
+				Log.i(null,"retargeting tb"+target_bearing + " tbc=" + target_bearing_current + " d=" + d);
 			}
 		}
 		
@@ -408,8 +435,9 @@ public class TargetCompass extends View {
 		
 		private int rotate(int from, int to)
 		{
-			int d = (int)(to - from) % 360;
-			d = (Math.abs(d) > 180 ? (360 - d) % 360 : d);
+			int d = (int)(to - from) % 360;		
+			if (d > 180) d -= 360;
+			if (d < -180)d += 360;
 			int v = (d < 0 ? -1 : 1);
 			
 			if (d == 0)
