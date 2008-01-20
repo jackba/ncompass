@@ -1,10 +1,10 @@
 package info.nymble.ncompass.view;
 
+import info.nymble.measure.Stopwatch;
+import info.nymble.ncompass.R;
+
 import java.util.Map;
 
-import info.nymble.measure.Stopwatch;
-import info.nymble.ncompass.LocationTracker;
-import info.nymble.ncompass.R;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -13,6 +13,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -35,18 +36,21 @@ public class TargetCompass extends View {
 	private final String no_bearing_message = "Current Bearing Unknown";
 	private final String no_target_message = "No Target Set";
 	private final Paint error_message_paint = buildErrorPaint();
-
+	private final float degree_error_tolerance = 5.0F;
+	
 	// variables for containing and rotating the compass images
-	private Rect bounds = new Rect(); // the square bounding rectangle into which we draw the compass
-	private int height; // the screen height
-	private int width; // the screen width
-	private float cx; // center of the screen on the horizontal axis
-	private float cy; // center of the screen on the vertical axis
+	private Rect bounds = new Rect(); 	// the square bounding rectangle into which we draw the compass
+	private float cx; 					// center of the screen on the horizontal axis
+	private float cy; 					// center of the screen on the vertical axis
 
+	private Location displayLocation = null;
+	private Location displayTarget = null;
 	private Location location = null;
 	private Location target = null;
-	private LocationTracker tracker = null;
+	
 
+	
+	
 	
 	
 	public TargetCompass(Context c) 
@@ -95,7 +99,7 @@ public class TargetCompass extends View {
 			if (target == null || t.getLatitude() != target.getLatitude()
 					|| t.getLongitude() != target.getLongitude()) {
 				target = t;
-				postInvalidate();
+				invalidateIfNecessary();
 			}
 		}
 	}
@@ -140,7 +144,7 @@ public class TargetCompass extends View {
 					|| l.getLongitude() != location.getLongitude()
 					|| l.getBearing() != location.getBearing()) {
 				location = l;
-				postInvalidate();
+				invalidateIfNecessary();
 			}
 		}
 	}
@@ -182,21 +186,26 @@ public class TargetCompass extends View {
 	 */
 	protected void onDraw(Canvas canvas) {
 		Stopwatch.start();
-		setDimensions();
 
-		if (location != null && location.hasBearing()) {
+		this.onDrawBackground(canvas);
+		if (location != null && location.hasBearing()) 
+		{
 			canvas.save();
 			canvas.rotate(-location.getBearing(), cx, cy);
 			nwse.draw(canvas);
 			canvas.restore();
 
-			if (target != null) {
+			if (target != null) 
+			{
 				canvas.rotate(location.bearingTo(target), cx, cy);
 				needle.draw(canvas);
-			} else {
+			} else 
+			{
 				canvas.drawText(no_target_message, cx, cy, error_message_paint);
 			}
-		} else {
+		} 
+		else 
+		{
 			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
 		}
 
@@ -205,9 +214,69 @@ public class TargetCompass extends View {
 
 	
 	
+
 	
 	
 	
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		Log.i(null, "onSizeChanged w=" + w + " h=" + h);
+		super.onSizeChanged(w, h, oldw, oldh);
+		setDimensions(w, h);
+	}
+
+	@Override
+	public boolean onMotionEvent(MotionEvent event) {
+		// mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
+		// mContext.startActivity(new Intent(Intent.VIEW_ACTION,
+		// Recent.CONTENT_URI));
+
+		if (event.getAction() == MotionEvent.ACTION_UP) {
+			Location target = new Location();
+			target.setLatitude(37.447524150941874);
+			target.setLongitude(-122.11882744124402);
+
+//			setLocation(tracker.getCurrentLocation());
+			setTarget(target);
+		}
+
+		return true;
+	}
+	
+	
+	
+	
+	
+	
+	/**
+	 * We should only redraw the window if the location or
+	 * target that is being displayed is inaccurate by more
+	 * than degree_error_tolerance.
+	 * 
+	 * TODO assumes Location.bearingTo(null) does not throw an error
+	 */
+	private void invalidateIfNecessary()
+	{
+		boolean redraw = (displayLocation == null ^ location == null) ||
+						(displayTarget == null ^ target == null) ||
+						(location != null && 
+								( exceedsDifference (location.getBearing(), displayLocation.getBearing()) ||
+								  exceedsDifference (location.bearingTo(target), displayLocation.bearingTo(displayTarget)))
+						);
+		
+		if (redraw)
+		{
+			displayLocation = location;
+			displayTarget = target;
+			postInvalidate();
+		}
+	}
+	
+	
+	private boolean exceedsDifference(float f1, float f2)
+	{
+		return Math.abs(f1) - Math.abs(f2) > this.degree_error_tolerance;
+	}
 	
 	
 	/**
@@ -233,20 +302,16 @@ public class TargetCompass extends View {
 	 * used to set these values. They are only corrected if the mMeasuredHeight
 	 * or mMeasuredWidth of the view are changed.
 	 */
-	private void setDimensions() {
-		int h = mMeasuredHeight;
-		int w = mMeasuredWidth;
+	private void setDimensions(int w, int h) 
+	{
+		w = w - getPaddingLeft() - getPaddingRight();
+		h = h - getPaddingTop() - getPaddingBottom();
+		cx = w / 2 + getPaddingLeft();
+		cy = h / 2 + getPaddingTop();
+		setSquareBounds(h, w, (int)cx, (int)cy, bounds);
 
-		if (h != height || w != width) {
-			width = w;
-			height = h;
-			cx = w / 2;
-			cy = h / 2;
-			setSquareBounds(h, w, bounds);
-
-			nwse.setBounds(bounds);
-			needle.setBounds(bounds);
-		}
+		nwse.setBounds(bounds);
+		needle.setBounds(bounds);
 	}
 
 	/**
@@ -257,35 +322,68 @@ public class TargetCompass extends View {
 	 * 
 	 * @return a square that fits the dimensions
 	 */
-	private void setSquareBounds(int h, int w, Rect r) {
-		if (h > w) {
-			r.left = 0;
-			r.top = (int) Math.floor((h - w) / 2);
-			r.right = w;
-			r.bottom = r.top + w;
-		} else {
-			r.left = (int) Math.floor((w - h) / 2);
-			r.top = 0;
-			r.right = r.left + h;
-			r.bottom = 0;
-		}
+	private void setSquareBounds(int h, int w, int cx, int cy, Rect r) {
+		int radius = Math.min(w, h)/2;
+
+		r.left = cx - radius;
+		r.right = cx + radius;
+		r.top = cy  - radius;
+		r.bottom = cy + radius;
 	}
-
-	@Override
-	public boolean onMotionEvent(MotionEvent event) {
-		// mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
-		// mContext.startActivity(new Intent(Intent.VIEW_ACTION,
-		// Recent.CONTENT_URI));
-
-		if (event.getAction() == MotionEvent.ACTION_UP) {
-			Location target = new Location();
-			target.setLatitude(37.447524150941874);
-			target.setLongitude(-122.11882744124402);
-
-			setLocation(tracker.getCurrentLocation());
-			setTarget(target);
+	
+	
+	
+	
+	private class Spinner
+	{
+		private float nwse_bearing = 0;
+		private float target_bearing = 0;
+		private float nwse_bearing_current = 0;
+		private float target_bearing_current = 0;
+		
+		public void setNWSEBearing(float f)
+		{
+			nwse_bearing = f;
 		}
-
-		return true;
+		
+		public void setTargetBearing(float f)
+		{
+			target_bearing = f;
+		}
+		
+		
+		public float getNWSE()
+		{
+			nwse_bearing_current = rotate(nwse_bearing_current, nwse_bearing);
+			return nwse_bearing_current;
+		}
+		
+		public float getTarget()
+		{
+			target_bearing_current = rotate(target_bearing_current, target_bearing);
+			return target_bearing_current;
+		}
+		
+		public boolean isStable()
+		{
+			return nwse_bearing == nwse_bearing_current && target_bearing == target_bearing_current;
+		}
+		
+		
+		private float rotate(float from, float to)
+		{
+			if (from < to + 1 && from > to - 1)
+			{
+				return to;
+			}
+			if (from < to)
+			{
+				return from + 1;
+			}
+			else
+			{
+				return from - 1;
+			}
+		}
 	}
 }
