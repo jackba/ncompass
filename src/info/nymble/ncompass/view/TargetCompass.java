@@ -48,7 +48,7 @@ public class TargetCompass extends View {
 	private Location location = null;
 	private Location target = null;
 	
-
+	private Spinner spinner = new Spinner();
 	
 	
 	
@@ -191,13 +191,13 @@ public class TargetCompass extends View {
 		if (location != null && location.hasBearing()) 
 		{
 			canvas.save();
-			canvas.rotate(-location.getBearing(), cx, cy);
+			canvas.rotate(spinner.getNWSE(), cx, cy);
 			nwse.draw(canvas);
 			canvas.restore();
 
 			if (target != null) 
 			{
-				canvas.rotate(location.bearingTo(target), cx, cy);
+				canvas.rotate(spinner.getTarget(), cx, cy);
 				needle.draw(canvas);
 			} else 
 			{
@@ -209,6 +209,7 @@ public class TargetCompass extends View {
 			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
 		}
 
+		if (!spinner.isStable()) postInvalidate();
 		Stopwatch.stop("redrawing compass");
 	}
 
@@ -266,6 +267,8 @@ public class TargetCompass extends View {
 		
 		if (redraw)
 		{
+			Log.i(null, "redrawing compass");
+			spinner.setUnstable(location, target);
 			displayLocation = location;
 			displayTarget = target;
 			postInvalidate();
@@ -333,24 +336,54 @@ public class TargetCompass extends View {
 	
 	
 	
-	
+	/**
+	 * Internal class to handle the animation of the compass
+	 * face for intermediate positions while turning the graphics
+	 * to their destination rotations. Operates by moving the position
+	 * toward the destination each time it is retrieved. The 
+	 * isStabilized function answers whether the device has reached
+	 * a stable state where the represented position and the 
+	 * destination are equivalent. 
+	 * 
+	 * @author Andrew Evenson
+	 *
+	 */
 	private class Spinner
 	{
-		private float nwse_bearing = 0;
-		private float target_bearing = 0;
-		private float nwse_bearing_current = 0;
-		private float target_bearing_current = 0;
+		private boolean initializedNWSE = false;
+		private boolean initializedTarget = false;
 		
-		public void setNWSEBearing(float f)
+		
+		private int nwse_bearing = 0;
+		private int target_bearing = 0;
+		private int nwse_bearing_current = 0;
+		private int target_bearing_current = 0;
+		
+		private int speed = 1;
+		
+		
+		public void setUnstable(Location l, Location t)
 		{
-			nwse_bearing = f;
+			if (l != null)
+			{
+				nwse_bearing = (int)-l.getBearing();
+				if (!initializedNWSE)
+				{
+					nwse_bearing_current = nwse_bearing;
+					initializedNWSE = true;
+				}
+
+				if (t!= null)
+				{					
+					target_bearing = (int)l.bearingTo(t);
+					if (!initializedTarget)
+					{
+						target_bearing_current = target_bearing;
+						initializedTarget = true;
+					}
+				}
+			}
 		}
-		
-		public void setTargetBearing(float f)
-		{
-			target_bearing = f;
-		}
-		
 		
 		public float getNWSE()
 		{
@@ -366,24 +399,37 @@ public class TargetCompass extends View {
 		
 		public boolean isStable()
 		{
-			return nwse_bearing == nwse_bearing_current && target_bearing == target_bearing_current;
+			boolean isStable = nwse_bearing == nwse_bearing_current && target_bearing == target_bearing_current;
+			
+			if (isStable) Log.i(null, "compass stabilized");
+			return isStable;
 		}
 		
 		
-		private float rotate(float from, float to)
+		private int rotate(int from, int to)
 		{
-			if (from < to + 1 && from > to - 1)
+			int d = (int)(to - from) % 360;
+			d = (Math.abs(d) > 180 ? (360 - d) % 360 : d);
+			int v = (d < 0 ? -1 : 1);
+			
+			if (d == 0)
 			{
+				speed = 1;
 				return to;
 			}
-			if (from < to)
+			else if (d*v > 12)
 			{
-				return from + 1;
+				speed = Math.max(speed++, 8);
+				return speed*v + from;
 			}
 			else
 			{
-				return from - 1;
+				speed = Math.min(speed--, 1);
+				return speed*v + from;
 			}
 		}
 	}
 }
+
+
+

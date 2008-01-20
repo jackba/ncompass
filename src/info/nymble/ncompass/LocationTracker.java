@@ -25,7 +25,7 @@ import android.util.Log;
 public class LocationTracker 
 {
 	private static final String LOCATION_CHANGED_INTENT = LocationTracker.class.getName();
-    private static final long ACCEPTABLE_AGE_THRESHOLD = 500;
+    private static final long ACCEPTABLE_AGE_THRESHOLD = 2000;
     
     private Intent intent = new Intent(LOCATION_CHANGED_INTENT);
     private IntentFilter filter = new IntentFilter(LOCATION_CHANGED_INTENT);
@@ -89,7 +89,7 @@ public class LocationTracker
     	{
     		Log.i(null, "Registering Location Tracking");
     		context.registerReceiver(intentReceiver, filter);
-    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 1, intent);
+    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 100, intent);
     		listening = true;
     	}
     }
@@ -147,9 +147,8 @@ public class LocationTracker
 		{			
 			Location l = (Location)intent.getExtra("location");
 			
-			if (l != null && isLocationOutdated())
+			if (l != null && isLocationOutdated(l))
 			{				
-				Log.i(null, "Location update l=" + l.toString());
 				currentLocation = l;
 				notifyObservers(l);
 			}
@@ -158,7 +157,14 @@ public class LocationTracker
 
     private boolean isLocationOutdated()
     {
-    	return currentLocation == null || System.currentTimeMillis() - currentLocation.getTime() > ACCEPTABLE_AGE_THRESHOLD;
+    	return isLocationOutdated(null);
+    }
+    
+    private boolean isLocationOutdated(Location newLocation)
+    {
+    	long time = (newLocation != null ? newLocation.getTime() : System.currentTimeMillis());
+    	
+    	return currentLocation == null || time - currentLocation.getTime() > ACCEPTABLE_AGE_THRESHOLD;
     }
 
 //    private void logProvider(LocationProvider p)
