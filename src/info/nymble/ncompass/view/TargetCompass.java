@@ -33,7 +33,6 @@ import android.view.View;
 public class TargetCompass extends View {
 	private final BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
 	private final BitmapDrawable needle = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_needle);
-	private final BitmapDrawable cover = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_cover);
 	private final String no_bearing_message = "Current Bearing Unknown";
 	private final String no_target_message = "No Target Set";
 	private final Paint error_message_paint = buildErrorPaint();

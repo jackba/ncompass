@@ -2,28 +2,55 @@
 
 
     
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" 
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
 	
-	<info.nymble.ncompass.view.TargetCompass
-		xmlns:android="http://schemas.android.com/apk/res/android"
-	    android:layout_width="150dip"
-	    android:layout_height="150dip"
-		android:layout_centerHorizontal="true"
-		android:layout_centerVertical="true"
-	    id="@+id/compass" />
-	
-
-	    
-	<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+	<TextView
 		android:layout_width="fill_parent"	
 		android:layout_height="wrap_content"
-		android:layout_alignParentBottom="true"
-		android:layout_centerHorizontal="true"
+		android:textAlign="center"
+		android:textSize="18sp"
+		android:text="Title"
+		id="@+id/place_title"
+	/>	
+	
+	
+	<RelativeLayout 	    
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	    android:layout_weight="1">
+	    
+	    <ImageView 
+	    	android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:scaleType="fitCenter"
+	    	android:tint="#55335533"
+	    	id="@+id/place_image"
+	    />
+
+		<info.nymble.ncompass.view.TargetCompass
+		    android:layout_width="fill_parent"
+		    android:layout_height="135dip"
+		    android:layout_centerInParent="true"
+		    id="@+id/compass" />
+	</RelativeLayout>
+	
+	<LinearLayout
+		android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"
 		android:gravity="bottom"
-		android:text="Hello Compass"
-	/>
-</RelativeLayout>
+	    android:orientation="horizontal">
+	    
+		<TextView
+			android:layout_width="fill_parent"	
+			android:layout_height="wrap_content"
+			android:text="Hello Compass"
+			android:textAlign="center"
+			id="@+id/place_distance"
+		/>
+	</LinearLayout>
+</LinearLayout>
 
 
