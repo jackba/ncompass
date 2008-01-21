@@ -9,7 +9,6 @@ import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -78,12 +77,10 @@ public class TargetCompassActivity extends Activity
 		Location l = compass.getLocation();
 		Location t = compass.getTarget();
 		
-		Log.i(null, "location changed");
 		if (l != null && t != null)
 		{
 			final float d = l.distanceTo(t);
-			
-			
+
 			handler.post(new Runnable(){
 				public void run()
 				{
