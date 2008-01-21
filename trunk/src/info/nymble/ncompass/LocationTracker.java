@@ -25,7 +25,7 @@ import android.util.Log;
 public class LocationTracker 
 {
 	private static final String LOCATION_CHANGED_INTENT = LocationTracker.class.getName();
-    private static final long ACCEPTABLE_AGE_THRESHOLD = 2000;
+    private static final long ACCEPTABLE_AGE_THRESHOLD = 125;
     
     private Intent intent = new Intent(LOCATION_CHANGED_INTENT);
     private IntentFilter filter = new IntentFilter(LOCATION_CHANGED_INTENT);
