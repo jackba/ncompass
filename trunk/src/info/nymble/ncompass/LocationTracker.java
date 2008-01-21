@@ -89,7 +89,7 @@ public class LocationTracker
     	{
     		Log.i(null, "Registering Location Tracking");
     		context.registerReceiver(intentReceiver, filter);
-    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 100, intent);
+    		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 1, intent);
     		listening = true;
     	}
     }

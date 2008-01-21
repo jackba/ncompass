@@ -1,6 +1,6 @@
 package info.nymble.ncompass.view;
 
-import info.nymble.measure.Stopwatch;
+import info.nymble.measure.T;
 import info.nymble.ncompass.R;
 
 import java.util.Map;
@@ -14,7 +14,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -36,19 +35,17 @@ public class TargetCompass extends View {
 	private final String no_bearing_message = "Current Bearing Unknown";
 	private final String no_target_message = "No Target Set";
 	private final Paint error_message_paint = buildErrorPaint();
-	private final float degree_error_tolerance = 5.0F;
 	
 	// variables for containing and rotating the compass images
 	private Rect bounds = new Rect(); 	// the square bounding rectangle into which we draw the compass
 	private float cx; 					// center of the screen on the horizontal axis
 	private float cy; 					// center of the screen on the vertical axis
 
-	private Location displayLocation = null;
-	private Location displayTarget = null;
+
 	private Location location = null;
 	private Location target = null;
-	
-	private Spinner spinner = new Spinner();
+	private ProgressiveDisplay nwse_display = new ProgressiveDisplay();
+	private ProgressiveDisplay needle_display = new ProgressiveDisplay();
 	
 	
 	
@@ -94,14 +91,10 @@ public class TargetCompass extends View {
 	 * 
 	 * @param t the location to use as 'point to there'
 	 */
-	public void setTarget(Location t) {
-		if (t != null) {
-			if (target == null || t.getLatitude() != target.getLatitude()
-					|| t.getLongitude() != target.getLongitude()) {
-				target = t;
-				invalidateIfNecessary();
-			}
-		}
+	public void setTarget(Location t) 
+	{
+		target = t;
+		updateView();
 	}
 
 	/**
@@ -139,14 +132,8 @@ public class TargetCompass extends View {
 	 * @param l the location to represent as 'from here'
 	 */
 	public void setLocation(Location l) {
-		if (l != null) {
-			if (location == null || l.getLatitude() != location.getLatitude()
-					|| l.getLongitude() != location.getLongitude()
-					|| l.getBearing() != location.getBearing()) {
-				location = l;
-				invalidateIfNecessary();
-			}
-		}
+		location = l;
+		updateView();
 	}
 
 	/**
@@ -179,25 +166,28 @@ public class TargetCompass extends View {
 
 	
 	
+
+	
 	
 	@Override
 	/**
 	 * The main routine of the class, draws the compass images to the screen.
+	 * Uses the spinner to perform animation (transition images between
+	 * the current canvas and the canvas that represents accurately the 
+	 * current state).
 	 */
 	protected void onDraw(Canvas canvas) {
-		Stopwatch.start();
-
 		this.onDrawBackground(canvas);
-		if (location != null && location.hasBearing()) 
+		if (nwse_display.isVisible()) 
 		{
 			canvas.save();
-			canvas.rotate(spinner.getNWSE(), cx, cy);
+			canvas.rotate(nwse_display.getBearing(), cx, cy);
 			nwse.draw(canvas);
 			
 
-			if (target != null) 
+			if (needle_display.isVisible()) 
 			{
-				canvas.rotate(spinner.getTarget(), cx, cy);
+				canvas.rotate(needle_display.getBearing(), cx, cy);
 				needle.draw(canvas);
 				canvas.restore();
 			} else 
@@ -210,16 +200,9 @@ public class TargetCompass extends View {
 		{
 			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
 		}
-
-		if (!spinner.isStable()) postInvalidate();
-		Stopwatch.stop("redrawing compass");
+		if (!nwse_display.isStable() | !needle_display.isStable()) postInvalidate();
 	}
 
-	
-	
-
-	
-	
 	
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -227,82 +210,42 @@ public class TargetCompass extends View {
 		super.onSizeChanged(w, h, oldw, oldh);
 		setDimensions(w, h);
 	}
-
-	@Override
-	public boolean onMotionEvent(MotionEvent event) {
-		// mContext.getContentResolver().insert(Recent.CONTENT_URI, null);
-		// mContext.startActivity(new Intent(Intent.VIEW_ACTION,
-		// Recent.CONTENT_URI));
-
-		if (event.getAction() == MotionEvent.ACTION_UP) {
-			Location target = new Location();
-			target.setLatitude(37.447524150941874);
-			target.setLongitude(-122.11882744124402);
-
-//			setLocation(tracker.getCurrentLocation());
-			setTarget(target);
-		}
-
-		return true;
-	}
 	
 	
 	
 	
 	
-	
+		
 	/**
-	 * We should only redraw the window if the location or
-	 * target that is being displayed is inaccurate by more
-	 * than degree_error_tolerance.
-	 * 
-	 * TODO assumes Location.bearingTo(null) does not throw an error
+	 * Updates the display controls with the new target and location.
+	 * If the displays become unstable, will postInvalidate to ensure 
+	 * the window is redrawn.
 	 */
-	private void invalidateIfNecessary()
+	private void updateView()
 	{
-		boolean redraw = (displayLocation == null ^ location == null) ||
-						(displayTarget == null ^ target == null) ||
-						(location != null && 
-								( exceedsDifference (location.getBearing(), displayLocation.getBearing()) ||
-								  exceedsDifference (location.bearingTo(target), displayLocation.bearingTo(displayTarget)))
-						);
+		boolean showNWSE = (location != null && location.hasBearing());
+		boolean showTarget = (showNWSE && target != null);
 		
-		Log.i(null, "invalidation step");
-		Log.i(null, "dl=" + displayLocation);
-		Log.i(null, "dt=" + displayTarget);
-		Log.i(null, "l=" + location);
-		Log.i(null, "t=" + target);
-		if (location != null)
-		{
-			Log.i(null, "bearing=" + location.getBearing());
-			if (target != null) Log.i(null, "bearingTo=" + location.bearingTo(target));
+		if (showNWSE)
+		{			
+			nwse_display.setBearing( (int)-location.getBearing() );
 		}
-		if (displayLocation != null)
+		else
 		{
-			Log.i(null, "display bearing=" + displayLocation.getBearing());
-			if (displayTarget != null) Log.i(null, "displayBearingTo=" + displayLocation.bearingTo(displayTarget));
+			nwse_display.clearBearing();
 		}
-		
-		
-		
-		
-		
-		if (redraw)
+			
+		if (showTarget)
 		{
-			Log.i(null, "redrawing compass");
-			spinner.setUnstable(location, target);
-			displayLocation = location;
-			displayTarget = target;
-			postInvalidate();
+			needle_display.setBearing( (int)location.bearingTo(target) );
 		}
+		else
+		{
+			needle_display.clearBearing();
+		}
+
+		if (!nwse_display.isStable() | !needle_display.isStable()) postInvalidate();
 	}
-	
-	
-	private boolean exceedsDifference(float f1, float f2)
-	{
-		return Math.abs(f1 - f2) > this.degree_error_tolerance;
-	}
-	
 	
 	/**
 	 * Manufactures a paint object that is suited to drawing error messages on
@@ -358,6 +301,8 @@ public class TargetCompass extends View {
 	
 	
 	
+	
+	
 	/**
 	 * Internal class to handle the animation of the compass
 	 * face for intermediate positions while turning the graphics
@@ -367,71 +312,95 @@ public class TargetCompass extends View {
 	 * a stable state where the represented position and the 
 	 * destination are equivalent. 
 	 * 
+	 * Whenever the target or nwse are not displayed, setting the
+	 * target or nwse will cause them to appear immediately in their 
+	 * correct positions without intermediate animation. 
+	 * 
+	 * 
 	 * @author Andrew Evenson
 	 *
 	 */
-	private class Spinner
+	private static class ProgressiveDisplay
 	{
-		private boolean initializedNWSE = false;
-		private boolean initializedTarget = false;
+		private final T watch = new T("stabilization interval");
+		private final int degree_error_tolerance = 10;
 		
-		
-		private int nwse_bearing = 0;
-		private int target_bearing = 0;
-		private int nwse_bearing_current = 0;
-		private int target_bearing_current = 0;
-		
+		private boolean wasDestablized = false;
+		private boolean visible = false;
+		private boolean visibleReported = false;
+		private boolean exceededTolerance = false;
+		private int bearing = 0;
+		private int bearing_current = 0;
+
 		private int speed = 1;
 		
 		
-		public void setUnstable(Location l, Location t)
+		public void setBearing(int bearing)
 		{
-			if (l != null)
-			{
-				nwse_bearing = (int)-l.getBearing();
-				if (!initializedNWSE)
-				{
-					nwse_bearing_current = nwse_bearing;
-					initializedNWSE = true;
-				}
-
-				if (t!= null)
-				{					
-					target_bearing = (int)l.bearingTo(t);
-					if (!initializedTarget)
-					{
-						target_bearing_current = target_bearing;
-						initializedTarget = true;
-					}
-				}
-				int d = (int)(target_bearing - target_bearing_current) % 360;
-				if (d > 180) d -= 360;
-				if (d < -180) d += 360;
-				Log.i(null,"retargeting tb"+target_bearing + " tbc=" + target_bearing_current + " d=" + d);
-			}
+			visible = true;
+			this.bearing = bearing;
+			exceededTolerance = exceedsDifference(this.bearing, bearing_current);
 		}
 		
-		public float getNWSE()
+		public void clearBearing()
 		{
-			nwse_bearing_current = rotate(nwse_bearing_current, nwse_bearing);
-			return nwse_bearing_current;
+			visible = false;
 		}
-		
-		public float getTarget()
-		{
-			target_bearing_current = rotate(target_bearing_current, target_bearing);
-			return target_bearing_current;
-		}
+	
 		
 		public boolean isStable()
 		{
-			boolean isStable = nwse_bearing == nwse_bearing_current && target_bearing == target_bearing_current;
+			boolean isStable = visible == visibleReported &&
+								!exceededTolerance;
 			
-			if (isStable) Log.i(null, "compass stabilized");
+			
+			if (isStable && wasDestablized)
+			{
+				wasDestablized = false;
+				watch.stop();
+			}
+			else if (!isStable && !wasDestablized)
+			{
+				wasDestablized = true;
+				watch.start();
+			}
+			
 			return isStable;
 		}
 		
 		
+		
+		public boolean isVisible()
+		{
+			visibleReported = visible;
+			
+			return visibleReported;
+		}
+		
+		public float getBearing()
+		{
+			bearing_current = rotate(bearing_current, bearing);
+			exceededTolerance = (bearing_current != bearing);
+			
+			return bearing_current;
+		}
+
+
+		
+		
+		
+		
+		/**
+		 * Calculates the rotation angle that should next be
+		 * used when traveling between from and to given the 
+		 * current speed
+		 * 
+		 * @param from the current angle
+		 * @param to the destination angle
+		 * @return a value between from and to that represents
+		 * the next best angle to represent given the current
+		 * speed.
+		 */
 		private int rotate(int from, int to)
 		{
 			int d = (int)(to - from) % 360;		
@@ -454,6 +423,13 @@ public class TargetCompass extends View {
 				speed = Math.min(speed--, 1);
 				return speed*v + from;
 			}
+		}
+		
+		
+		
+		private boolean exceedsDifference(int i1, int i2)
+		{
+			return Math.abs(i1 - i2) > degree_error_tolerance;
 		}
 	}
 }
