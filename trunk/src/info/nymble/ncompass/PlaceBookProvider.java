@@ -1,6 +1,8 @@
 package info.nymble.ncompass;
 
 
+import java.util.Date;
+
 import info.nymble.ncompass.PlaceBook.Intents;
 import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.PlaceBook.Places;
@@ -13,6 +15,7 @@ import android.content.QueryBuilder;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.location.Location;
 import android.net.ContentURI;
 import android.util.Log;
@@ -96,7 +99,29 @@ public class PlaceBookProvider  extends ContentProvider
     @Override
     public int delete(ContentURI uri, String selection, String[] selectionArgs)
     {
-        return 0;
+        int whichURI = parser.match(uri);
+        int whichType = whichURI >> 1;
+        long rowId = uri.getPathLeafId();
+        int affected = -1;
+        
+        switch (whichType)
+        {
+            case 0:
+            	affected = conn.delete("PlaceLists", "_id=" + rowId, PlaceBookDB.EMPTY_ARGS);
+                break;
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI " + uri);
+        }
+    	
+        if (affected > 0)
+        {            		
+        	getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return affected;
     }
 
 
@@ -113,7 +138,7 @@ public class PlaceBookProvider  extends ContentProvider
         switch (whichType)
         {
             case 0:
-                insertOrUpdateLocation(uri, values);
+                rowId = insertOrUpdateLocation(uri, values);
                 break;
             case 1:
                 rowId = conn.insert("Lists", "_empty", values);
@@ -200,7 +225,7 @@ public class PlaceBookProvider  extends ContentProvider
             
             if (!hasLat) values.put(Places.LAT, l.getLatitude());
             if (!hasLon) values.put(Places.LON, l.getLongitude());
-            if (!hasLon) values.put(Places.ALT, l.getAltitude());
+            if (!hasAlt) values.put(Places.ALT, l.getAltitude());
         }
         
         Long updated = Long.valueOf(System.currentTimeMillis());
@@ -216,8 +241,29 @@ public class PlaceBookProvider  extends ContentProvider
         ensureCompleteValues(values);
         long placeId = getPlace(values);
         long listId = getList(values);
-        long placeList = -1;
+        long placeList = getPlaceListEntry(listId, placeId);
         
+       
+        if (placeList < 0)
+        {
+            String sql = "INSERT INTO PlaceLists (place, list, date) VALUES (?, ?, ?)";
+            SQLiteStatement statement =  conn.compileStatement(sql);
+            
+            statement.bindLong(1, placeId);
+            statement.bindLong(2, listId);
+            statement.bindLong(3, new Date().getTime());
+            statement.execute();
+
+            placeList = getPlaceListEntry(listId, placeId);
+            // TODO truncate list to appropriate length
+        }
+        
+        return placeList;
+    }
+    
+    
+    private long getPlaceListEntry(long listId, long placeId)
+    {
         String[] args = new String[]{String.valueOf(listId), String.valueOf(placeId)};
         String sql =    " SELECT c._id AS _id, c.place AS place_id " + 
                         " FROM PlaceLists c INNER JOIN Lists l ON c.list = l._id " +
@@ -228,24 +274,16 @@ public class PlaceBookProvider  extends ContentProvider
         
         if (c.first() && c.getLong(1) == placeId)
         {
-            placeList = c.getLong(0);
+            return c.getLong(0);
         }
-        else
-        {
-            values.put("place", placeId);
-            values.put("list", listId);
-            placeList = conn.insert("PlaceLists", "_empty", values);
-            
-            // TODO truncate list to appropriate length
-        }
-        
-        return placeList;
+        return -1;
     }
     
     
     private long getPlace(ContentValues values)
     {
-        String[] args = {values.getAsString(Places.LAT), values.getAsString(Places.LON), values.getAsString(Places.ALT)};
+    	String[] columns = new String[]{Places.LAT, Places.LON, Places.ALT};
+        String[] args = getValuesArray(values, columns);
         Cursor c = conn.query("SELECT _id FROM Places WHERE lat=? AND lon=? AND alt=?", args);
 
         if (c.first())
@@ -254,10 +292,32 @@ public class PlaceBookProvider  extends ContentProvider
         }
         else
         {
-            return conn.insert("Places", "_empty", values);            
+            return conn.insert("Places", "_empty", getValuesSubset(values, columns));            
         }   
     }
 
+    private ContentValues getValuesSubset(ContentValues values, String[] keys)
+    {
+    	ContentValues v = new ContentValues();
+    	
+    	for (int i = 0; i < keys.length; i++) {
+    		v.put(keys[i], values.getAsString(keys[i]));
+		}
+
+    	return v;
+    }
+    
+    private String[] getValuesArray(ContentValues values, String[] keys)
+    {
+    	String[] v = new String[keys.length];
+    	
+    	for (int i = 0; i < keys.length; i++) {
+    		v[i] = values.getAsString(keys[i]);
+		}
+
+    	return v;
+    }
+    
     
     private long getList(ContentValues values)
     {

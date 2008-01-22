@@ -339,6 +339,7 @@ public class TargetCompass extends View {
 		{
 			visible = true;
 			this.bearing = bearing;
+			if (!visibleReported) this.bearing_current = bearing;
 			exceededTolerance = exceedsDifference(this.bearing, bearing_current);
 		}
 		

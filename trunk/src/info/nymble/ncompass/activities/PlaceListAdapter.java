@@ -93,14 +93,12 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        Log.w(null, "getView:  position=" + position);
         if (convertView == null )
         {
         	Place p = places.get(position);
         	
         	if (p.view == null)
         	{        		
-        		Log.w(null, "rebuilding view");
         		convertView = inflate.inflate(R.layout.place, null, null);
         		
         		TextView dateText = (TextView)convertView.findViewById(R.id.place_date);
