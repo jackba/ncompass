@@ -26,9 +26,17 @@
 	    	android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
 			android:scaleType="fitCenter"
-	    	android:tint="#55335533"
 	    	id="@+id/place_image"
 	    />
+
+	    <View 
+	    	android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:scaleType="fitCenter"
+	    	android:background="#66000000"
+			id="@+id/place_overlay"
+	    />
+
 
 		<info.nymble.ncompass.view.TargetCompass
 		    android:layout_width="fill_parent"

@@ -3,6 +3,7 @@ package info.nymble.ncompass.activities;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
+import info.nymble.ncompass.PlaceBook.Places;
 
 import java.util.ArrayList;
 
@@ -89,6 +90,19 @@ public class PlaceListActivity extends Activity
         }
         );
         
+        
+        menu.addSeparator(0, 0);
+        
+        menu.add(2, 1, "Delete Place", new Runnable()
+        {
+            public void run()
+            {
+            	removePlace();
+            }
+        }
+        );
+        
+        
         return true;
     }
     
@@ -102,6 +116,17 @@ public class PlaceListActivity extends Activity
         resolver.delete(Lists.LISTS_URI, "list=?", new String[]{listId});
     }
     
+    
+    
+    private void removePlace()
+    {
+    	long placeId = list.getSelectedItemId();
+        ContentResolver resolver = this.getContentResolver();
+        
+        Log.i(null, "deleting place id=" + placeId);
+        resolver.delete(Places.PLACES_URI.addId(placeId), null, null);
+        updateUI();
+    }
     
     
     
