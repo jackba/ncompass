@@ -2,6 +2,7 @@ package info.nymble.ncompass.activities;
 
 import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.Format;
@@ -22,9 +23,6 @@ import android.widget.TextView;
 
 public class PlaceListAdapter extends ObserverManager implements ListAdapter
 {
-    static final String[] columns = new String[]{"_id", Places.LAT, Places.LON, Places.ALT, "updated", Places.TITLE, "list_id"};
-
-
     ArrayList<Place> places = new ArrayList<Place>();
     
     Activity activity;
@@ -46,7 +44,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     
     public void setList(final long id)
     {
-        Cursor c = activity.managedQuery(Places.PLACES_URI, columns, "list_id=" + id, null);
+        Cursor c = PlaceBook.Places.query(activity.getContentResolver(), id);
         
         places.clear();
         loadDataFromCursor(c, places);
@@ -130,13 +128,13 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         Stopwatch.start();
         for (c.first(); !c.isAfterLast(); c.next())
         {
-            Place p = new Place(c.getLong(0), 
-                    Double.parseDouble(c.getString(1)), 
-                    Double.parseDouble(c.getString(2)), 
-                    Double.parseDouble(c.getString(3)));
+            Place p = new Place(c.getLong(c.getColumnIndex(Places.ID)), 
+                    Double.parseDouble(c.getString(c.getColumnIndex(Places.LAT))), 
+                    Double.parseDouble(c.getString(c.getColumnIndex(Places.LON))), 
+                    Double.parseDouble(c.getString(c.getColumnIndex(Places.ALT))));
             
-            p.date = Format.formatDate(c.getLong(4));
-            p.title = c.getString(5);
+            p.date = Format.formatDate(c.getLong(c.getColumnIndex(Places.UPDATED)));
+            p.title = c.getString(c.getColumnIndex(Places.TITLE));
             
             places.add(p);
         }
@@ -174,7 +172,5 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
             this.location.setLongitude(lon);
             this.location.setAltitude(alt);
         }
-
     }
-
 }

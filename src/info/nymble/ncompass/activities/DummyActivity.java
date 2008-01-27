@@ -1,9 +1,10 @@
 package info.nymble.ncompass.activities;
 
 
-import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.PlaceBookDB;
 import info.nymble.ncompass.R;
+import info.nymble.ncompass.PlaceBook.Lists;
+import info.nymble.ncompass.PlaceBook.Places;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
@@ -44,17 +45,17 @@ public class DummyActivity extends Activity
         
         
         
-//        PlaceBook.Places.update(getContentResolver(), 39, "Best place on earth", null, null);
-        PlaceBook.Places.add(getContentResolver(), l3, 4);
+//        Places.update(getContentResolver(), 39, "Best place on earth", null, null);
+        Places.add(getContentResolver(), l3, 4);
         
 
-//        PlaceBook.Places.delete(getContentResolver(), 33);
+//        Places.delete(getContentResolver(), 33);
         
-        Cursor c = PlaceBook.Places.query(getContentResolver(), 4);
+        Cursor c = Places.query(getContentResolver(), 4);
         PlaceBookDB.printCursor(c);
         
-//        c =  PlaceBook.Lists.query(getContentResolver());
-//        PlaceBookDB.printCursor(c);
+        c =  Lists.query(getContentResolver());
+        PlaceBookDB.printCursor(c);
 
 	}
 
