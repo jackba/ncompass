@@ -167,6 +167,18 @@ public final class PlaceBook
         	return resolver.query(LISTS_URI.addId(id), null, null, null, null);
         }
         
+        public static long get(ContentResolver resolver, String name)
+        {
+        	Cursor c = resolver.query(LISTS_URI, null, "name=?", new String[]{name}, null);
+        	
+        	if (c.first())
+        	{
+        		return c.getLong(c.getColumnIndex(Lists.ID));
+        	}
+        	
+        	return -1;
+        }
+        
         
         public static Cursor query(ContentResolver resolver)
         {

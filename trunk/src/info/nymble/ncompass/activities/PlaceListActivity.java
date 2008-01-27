@@ -8,7 +8,6 @@ import info.nymble.ncompass.PlaceBook.Places;
 import java.util.ArrayList;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -33,7 +32,7 @@ public class PlaceListActivity extends Activity
     final Handler handler = new Handler();
 
     
-    LocationTracker tracker = new LocationTracker(this);
+    LocationTracker tracker;
     Gallery gallery;
     ListView list;
     TextView loading;
@@ -49,6 +48,7 @@ public class PlaceListActivity extends Activity
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
+        tracker = new LocationTracker(this);
         setDefaultKeyMode(SHORTCUT_DEFAULT_KEYS);
         setContentView(R.layout.list_gallery);
 
@@ -109,11 +109,10 @@ public class PlaceListActivity extends Activity
     
     private void removeList()
     {
-    	String listId = String.valueOf(gallery.getSelectedItemId());
-        ContentResolver resolver = this.getContentResolver();
-        
+    	long listId = gallery.getSelectedItemId();
+
         Log.i(null, "removing list id=" + listId);
-        resolver.delete(Lists.LISTS_URI, "list=?", new String[]{listId});
+        Lists.delete(getContentResolver(), listId);
     }
     
     
@@ -121,10 +120,9 @@ public class PlaceListActivity extends Activity
     private void removePlace()
     {
     	long placeId = list.getSelectedItemId();
-        ContentResolver resolver = this.getContentResolver();
-        
+
         Log.i(null, "deleting place id=" + placeId);
-        resolver.delete(Places.PLACES_URI.addId(placeId), null, null);
+        Places.delete(getContentResolver(), placeId);
         updateUI();
     }
     
@@ -288,10 +286,10 @@ public class PlaceListActivity extends Activity
         
         private void loadData()
         {
-            Cursor cursor =  activity.managedQuery(Lists.LISTS_URI, null, null, null);
+            Cursor cursor =  Lists.query(activity.getContentResolver());
             
-            int nameColumn = cursor.getColumnIndex("name");
-            int idColumn = cursor.getColumnIndex("_id");
+            int nameColumn = cursor.getColumnIndex(Lists.NAME);
+            int idColumn = cursor.getColumnIndex(Lists.ID);
             int records = cursor.count();
             
             ids = new long[records];

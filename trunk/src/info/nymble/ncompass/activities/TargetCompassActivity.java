@@ -132,11 +132,8 @@ public class TargetCompassActivity extends Activity
 		updateDistance();
 		if (t != null)
 		{
-			ContentValues values = new ContentValues();
-			values.put(Places.LAT, t.getLatitude());
-			values.put(Places.LON, t.getLongitude());
-			values.put(Lists.NAME, "favorites");
-			getContentResolver().insert(Places.PLACES_URI, values);
+			long listId = Lists.get(getContentResolver(), "favorites");
+			Places.add(getContentResolver(), t, listId);
 		}
 	}
 	
