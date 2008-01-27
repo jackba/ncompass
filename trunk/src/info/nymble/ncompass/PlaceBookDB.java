@@ -18,29 +18,57 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
         static final String[] EMPTY_ARGS = new String[0];
         
         
-        static String SQL_SELECT_PLACES;
-        static String SQL_SELECT_LISTS;
-        static String SQL_SELECT_INTENTS;
+        static String SQL_PLACES_TABLE;
+        static String SQL_LISTS_TABLE;
+        static String SQL_INTENTS_TABLE;
         
-        static String SQL_DELETE_CLEANUP;
         
+        
+        static String SQL_PLACES_SELECT_PLACE;
+        static String SQL_PLACES_SELECT_ENTRY;
+        static String SQL_PLACES_COMPACT;
+        static String SQL_PLACES_CLEANUP;
         
         static
         {
-            SQL_SELECT_LISTS = "Lists" ;
-            SQL_SELECT_INTENTS = "Intents" ;
+            SQL_LISTS_TABLE = "Lists" ;
+            SQL_INTENTS_TABLE = "Intents" ;
             
-            SQL_SELECT_PLACES = "(SELECT c.list AS list_id, p._id AS place_id, p.lat AS lat, " +
-                " p.lon as lon, p.alt as alt, c.date AS updated, c._id AS _id, p.title as title " + 
+            
+            
+            
+            SQL_PLACES_TABLE = "(SELECT c.list AS list, c.place AS place, p.lat AS lat, " +
+                " p.lon as lon, p.alt as alt, c.date AS updated, c._id AS _id, p.title as title, p.created as created " + 
                 " FROM Places p INNER JOIN PlaceLists c ON p._id=c.place ORDER BY c.list ASC, c.date DESC) AS t1";
-            
-            
-            
 
+            SQL_PLACES_SELECT_PLACE = 	"SELECT _id FROM Places WHERE lat=? AND lon=? AND alt=?";
+            
+            SQL_PLACES_SELECT_ENTRY = 	"SELECT c1._id AS _id " + 
+							            " FROM 	PlaceLists c1 " + 
+							            "			INNER JOIN " + 
+							            "		Lists l " +
+							            "			ON c1.list = l._id " +
+							            "			LEFT JOIN " +
+							            "		(SELECT c2.list as list, Max(c2.date) as date FROM PlaceLists c2 GROUP BY c2.list) c3 " +
+							            "			ON c1.list = c3.list " +
+							            " WHERE l._id=? AND c1.place=? AND (NOT l.is_sequence OR c1.date = c3.date)";
+            
+            SQL_PLACES_COMPACT  = 	"SELECT c1._id, c1.date " +
+            						"FROM PlaceLists c1 " +
+									"WHERE 	c1.list=? " +
+									"  AND (SELECT MAX(capacity) " +
+									"		FROM Lists " +
+									"		WHERE _id=c1.list) <= " +
+									"		(SELECT COUNT(*) " +
+									"		FROM PlaceLists c2 " +
+									" 		WHERE c2.list=c1.list " +
+									"		  AND (c2.date > c1.date " + 
+									" 		   OR (c2.date = c1.date AND c2._id > c1._id))) " +
+									"ORDER BY c1.date DESC, c1._id DESC ";
+            
+            SQL_PLACES_CLEANUP = "DELETE FROM Places WHERE _id NOT IN (SELECT place FROM PlaceLists);";
         }
-        
-        
-        
+
         
         @Override
         public void onCreate(SQLiteDatabase db) 
@@ -187,7 +215,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             String[] cols = cursor.getColumnNames();
             StringBuffer buffer = new StringBuffer();
 
-            for (cursor.first(); cursor.next(); cursor.isAfterLast())
+            for (cursor.first(); !cursor.isAfterLast(); cursor.next())
             {
                 for (int k = 0; k < cols.length; k++)
                 {
