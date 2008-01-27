@@ -1,22 +1,18 @@
 package info.nymble.ncompass;
 
 
-import java.util.Date;
-
 import info.nymble.ncompass.PlaceBook.Intents;
 import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.PlaceBook.Places;
+
+import java.util.HashMap;
+
 import android.content.ContentProvider;
-import android.content.ContentProviderInfo;
 import android.content.ContentURIParser;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.QueryBuilder;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
-import android.location.Location;
 import android.net.ContentURI;
 import android.util.Log;
 
@@ -26,10 +22,9 @@ public class PlaceBookProvider  extends ContentProvider
 {
     public static final ContentURI CONTENT_URI = PlaceBook.CONTENT_URI;
 
-    private LocationTracker location = null;
+    private HashMap<Integer, Handler> handlers = new HashMap<Integer, Handler>();
     private ContentURIParser parser = null;   
     private SQLiteDatabase conn = null;
-    
     
     
     
@@ -42,7 +37,16 @@ public class PlaceBookProvider  extends ContentProvider
         parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH + "/#", 3);
         parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH, 4);
         parser.addURI(CONTENT_URI.getAuthority(), Intents.INTENTS_PATH + "/#", 5);
+        
+        handlers.put(0, new PlacesHandler());
+        handlers.put(1, new PlaceHandler());
+        handlers.put(2, new ListsHandler());
+        handlers.put(3, new ListHandler());
     }
+    
+    
+    
+    
     
     
     @Override
@@ -67,16 +71,7 @@ public class PlaceBookProvider  extends ContentProvider
         }
     }
     
-    
-    
-    @Override
-    public void attachInfo(Context context, ContentProviderInfo info)
-    {
-        super.attachInfo(context, info);
-        location = new LocationTracker(context);
-    }
-    
-    
+
     @Override
     public boolean onCreate()
     {
@@ -90,275 +85,221 @@ public class PlaceBookProvider  extends ContentProvider
         return conn != null;
     }
     
-
-
-    
-    
-    
     
     @Override
     public int delete(ContentURI uri, String selection, String[] selectionArgs)
     {
-        int whichURI = parser.match(uri);
-        int whichType = whichURI >> 1;
-        long rowId = uri.getPathLeafId();
-        int affected = -1;
-        
-        switch (whichType)
-        {
-            case 0:
-            	affected = conn.delete("PlaceLists", "_id=" + rowId, PlaceBookDB.EMPTY_ARGS);
-                break;
-            case 1:
-                break;
-            case 2:
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown URI " + uri);
-        }
-    	
-        if (affected > 0)
-        {            		
-        	getContext().getContentResolver().notifyChange(uri, null);
-        }
-        return affected;
+    	return getHandler(uri).delete(uri.getPathLeafId());
     }
-
 
     @Override
-    /**
-     *  
-     */
     public ContentURI insert(ContentURI uri, ContentValues values)
     {
-        int whichURI = parser.match(uri);
-        int whichType = whichURI >> 1;
-        long rowId = -1;
-        
-        switch (whichType)
-        {
-            case 0:
-                rowId = insertOrUpdateLocation(uri, values);
-                break;
-            case 1:
-                rowId = conn.insert("Lists", "_empty", values);
-                break;
-            case 2:
-                rowId = conn.insert("Intents", "_empty", values);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown URI " + uri);
-        }
-        
-        if (rowId > 0)
-        {
-            getContext().getContentResolver().notifyChange(uri, null);
-            return CONTENT_URI.addId(rowId);
-        }
-        else
-        {
-            throw new SQLException("Failed to insert row into " + uri);
-        }
+    	return getHandler(uri).insert(values);
     }
-
     
     @Override
     public int update(ContentURI uri, ContentValues values, String selection, String[] selectionArgs)
     {
-        return 0;
+        return getHandler(uri).update(uri.getPathLeafId(), values);
     }
 
     @Override
     public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     {
-        QueryBuilder qb = new QueryBuilder();
-        int whichURI = parser.match(uri);
-        boolean isDirectory = (whichURI % 2 == 0);
-        int whichType = whichURI >> 1;
-
-        switch (whichType)
-        {
-            case 0:
-                qb.setTables(PlaceBookDB.SQL_SELECT_PLACES);
-                break;
-            case 1:
-                qb.setTables(PlaceBookDB.SQL_SELECT_LISTS);
-                break;
-            case 2:
-                qb.setTables(PlaceBookDB.SQL_SELECT_INTENTS);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown URI " + uri);
-        }
-        
-        if (!isDirectory) qb.appendWhere("_id=" + uri.getPathSegment(1));
-
-        Cursor c = qb.query(conn, projection, selection, selectionArgs, groupBy, having, sortOrder);
-        c.setNotificationUri(getContext().getContentResolver(), uri);
-        
-        return c;
+        return getHandler(uri).query(uri, projection, selection, selectionArgs, groupBy, having, sortOrder);
     }
 
-    
-    
-    
-    /**
-     * Makes sure that the content values supplied 
-     * contain both a LAT and LON value. If either 
-     * is missing, the current lat or lon will be
-     * supplied in its place. Also adds a timestamp
-     * for date created.
-     * 
-     * @param values The ContentValues map to be checked
-     * @return a reference to a complete ContentValues map
-     */
-    private ContentValues ensureCompleteValues(ContentValues values)
-    {
-        if (values == null) values = new ContentValues();
-        boolean hasLat = values.containsKey(Places.LAT);
-        boolean hasLon = values.containsKey(Places.LON);
-        boolean hasAlt = values.containsKey(Places.ALT);
 
-        if ( !(hasLat && hasLon && hasAlt) )
-        {
-            Location l = location.getCurrentLocation();
-            
-            if (!hasLat) values.put(Places.LAT, l.getLatitude());
-            if (!hasLon) values.put(Places.LON, l.getLongitude());
-            if (!hasAlt) values.put(Places.ALT, l.getAltitude());
-        }
-        
-        Long updated = Long.valueOf(System.currentTimeMillis());
-        values.put(Places.CREATED, updated);
-        values.put("date", updated);
+    
+    
+  
+    
 
-        return values;
-    }
     
     
-    private long insertOrUpdateLocation(ContentURI uri, ContentValues values)
-    {
-        ensureCompleteValues(values);
-        long placeId = getPlace(values);
-        long listId = getList(values);
-        long placeList = getPlaceListEntry(listId, placeId);
-        
-       
-        if (placeList < 0)
-        {
-            String sql = "INSERT INTO PlaceLists (place, list, date) VALUES (?, ?, ?)";
-            SQLiteStatement statement =  conn.compileStatement(sql);
-            
-            statement.bindLong(1, placeId);
-            statement.bindLong(2, listId);
-            statement.bindLong(3, new Date().getTime());
-            statement.execute();
 
-            placeList = getPlaceListEntry(listId, placeId);
-            // TODO truncate list to appropriate length
-        }
-        
-        return placeList;
-    }
-    
-    
-    private long getPlaceListEntry(long listId, long placeId)
+    private Handler getHandler(ContentURI uri)
     {
-        String[] args = new String[]{String.valueOf(listId), String.valueOf(placeId)};
-        String sql =    " SELECT c._id AS _id, c.place AS place_id " + 
-                        " FROM PlaceLists c INNER JOIN Lists l ON c.list = l._id " +
-                        " WHERE l._id=? AND ( l.is_sequence OR c.place=? ) " +
-                        " ORDER BY c._id DESC " + 
-                        " LIMIT 1 ";
-        Cursor c = conn.query(sql, args);
-        
-        if (c.first() && c.getLong(1) == placeId)
-        {
-            return c.getLong(0);
-        }
-        return -1;
-    }
-    
-    
-    private long getPlace(ContentValues values)
-    {
-    	String[] columns = new String[]{Places.LAT, Places.LON, Places.ALT};
-        String[] args = getValuesArray(values, columns);
-        Cursor c = conn.query("SELECT _id FROM Places WHERE lat=? AND lon=? AND alt=?", args);
-
-        if (c.first())
-        {
-            return c.getLong(0);
-        }
-        else
-        {
-            return conn.insert("Places", "_empty", getValuesSubset(values, columns));            
-        }   
-    }
-
-    private ContentValues getValuesSubset(ContentValues values, String[] keys)
-    {
-    	ContentValues v = new ContentValues();
+    	Handler h = handlers.get(parser.match(uri));
     	
-    	for (int i = 0; i < keys.length; i++) {
-    		v.put(keys[i], values.getAsString(keys[i]));
+    	if (h != null)
+    	{
+    		return h;
+    	}
+    	else
+    	{    		
+    		throw new IllegalArgumentException("Unknown URI " + uri);
+    	}
+    }
+    
+    
+    
+    
+    
+    
+    class Handler 
+    {
+    	UnsupportedOperationException e = new UnsupportedOperationException();
+    	
+    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder){ throw e; }
+    	public ContentURI insert(ContentValues values){ throw e; }
+    	public int delete(long id){ throw e; }
+    	public int update(long id, ContentValues values){ throw e; }
+    }
+    
+    
+    class PlacesHandler extends Handler
+    {
+    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	{ 
+    		return conn.query(PlaceBookDB.SQL_PLACES_TABLE, projection, selection, selectionArgs, groupBy, having, sortOrder);
+    	}
+    	
+		public ContentURI insert(ContentValues values) 
+		{
+			return Places.PLACES_URI.addId(insertOrUpdateLocation(values));
 		}
 
-    	return v;
+	    
+	    private long insertOrUpdateLocation(ContentValues values)
+	    {
+	    	if (!values.containsKey(Places.LAT)) throw new IllegalArgumentException(Places.LAT + " argument missing");
+	    	if (!values.containsKey(Places.LON)) throw new IllegalArgumentException(Places.LON + " argument missing");
+	    	if (!values.containsKey(Places.LIST)) throw new IllegalArgumentException(Places.LIST + " argument missing");
+	    	if (!values.containsKey(Places.ALT)) values.put(Places.ALT, 0);    	
+	    	if (!values.containsKey(Places.INFO)) values.put(Places.INFO, "");    
+	    	
+	        long placeId = getPlace(values.getAsDouble(Places.LAT), values.getAsDouble(Places.LON), values.getAsDouble(Places.ALT));
+	        long listId = values.getAsLong(Places.LIST);
+	        long placeList = getPlaceListEntry(listId, placeId, values.getAsString(Places.INFO));
+
+	        return placeList;
+	    }
+	    
+	    
+	    private long getPlace(double lat, double lon, double alt)
+	    {
+	        String[] args = new String[]{String.valueOf(lat), String.valueOf(lon), String.valueOf(alt)};
+	        Cursor c = conn.query(PlaceBookDB.SQL_PLACES_SELECT_PLACE, args);
+	        
+	        if (c.first())
+	        {
+	            return c.getLong(0);
+	        }
+	        else
+	        {
+	        	ContentValues values = new ContentValues();
+	        	
+	        	values.put(Places.LAT, lat);
+	        	values.put(Places.LON, lon);
+	        	values.put(Places.ALT, alt);
+	        	values.put(Places.CREATED, System.currentTimeMillis());
+	        	
+	            return conn.insert("Places", "_empty", values); 
+	        }
+	    }
+	    
+	    
+	    private long getPlaceListEntry(long listId, long placeId, String info)
+	    {
+	    	String[] args = new String[]{String.valueOf(listId), String.valueOf(placeId)};
+	        Cursor c = conn.query(PlaceBookDB.SQL_PLACES_SELECT_ENTRY, args);
+	        ContentValues values = new ContentValues();
+	        long entryId = -1;
+	        
+	        values.put("date", System.currentTimeMillis());
+	        if (c.first())
+	        {
+	        	entryId = c.getLong(0);
+	        	conn.update("PlaceLists", values, "_id=" + entryId, null);
+	        }
+	        else
+	        {
+	        	values.put("place", placeId);
+	        	values.put("list", listId);
+	        	values.put("info", info);
+	        	
+	        	entryId = conn.insert("PlaceLists", "_empty", values);    
+	            compactPlaceLists(listId);
+	        }
+	        
+	        return entryId;
+	    }
+	    
+	    
+	    private void compactPlaceLists(long listId)
+	    {
+	    	String[] args = new String[]{String.valueOf(listId)};
+	    	Cursor c = conn.query(PlaceBookDB.SQL_PLACES_COMPACT, args);
+
+	    	if (c.first())
+	    	{
+	    		args = new String[]{args[0], c.getString(1), c.getString(1), c.getString(0)};
+	    		conn.delete("PlaceLists", "list=? AND (date<? OR (date=? AND _id<=?))", args);
+				conn.execSQL(PlaceBookDB.SQL_PLACES_CLEANUP);
+	    	}
+	    }
     }
     
-    private String[] getValuesArray(ContentValues values, String[] keys)
+    
+    class PlaceHandler extends Handler
     {
-    	String[] v = new String[keys.length];
-    	
-    	for (int i = 0; i < keys.length; i++) {
-    		v[i] = values.getAsString(keys[i]);
+		public int delete(long id) 
+		{
+			int affected = conn.delete("PlaceLists", "_id=" + id, PlaceBookDB.EMPTY_ARGS);
+			
+			if (affected > 0)
+			{
+				conn.execSQL(PlaceBookDB.SQL_PLACES_CLEANUP);
+			}
+			
+			return affected;
 		}
 
-    	return v;
+		public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	{ 
+			return conn.query(PlaceBookDB.SQL_PLACES_TABLE, projection, "_id=" + uri.getPathLeafId(), null, null, null, null);
+		}
+
+		public int update(long id, ContentValues values) 
+		{
+			Cursor c = query(Places.PLACES_URI.addId(id), new String[]{"place"}, null, null, null, null, null);
+			
+			if (c.first())
+			{
+				return conn.update("Places", values, "_id=" + c.getLong(0), null);
+			}
+			
+			return 0;
+		}
     }
     
     
-    private long getList(ContentValues values)
+    class ListsHandler extends Handler
     {
-        String[] args = {values.getAsString(Lists.NAME)};
-        Cursor c = conn.query("SELECT _id FROM Lists WHERE name=?", args);
-
-        if (c.first())
-        {
-            return c.getLong(0);
-        }
-        else
-        {
-            return conn.insert("Lists", "_empty", values);            
-        }   
+    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	{ 
+    		return conn.query(PlaceBookDB.SQL_LISTS_TABLE, projection, selection, selectionArgs, groupBy, having, sortOrder);
+    	}
+    	
+		public ContentURI insert(ContentValues values) 
+		{
+			return Lists.LISTS_URI.addId(conn.insert("Lists", "_empty", values));
+		}
     }
     
     
-    
+    class ListHandler extends Handler
+    {
+		public int delete(long id) 
+		{
+			return conn.delete("Lists", "_id=" + id, PlaceBookDB.EMPTY_ARGS);
+		}
 
-    
-    
-    
-    
-    /**
-     * Maintains the lists lengths by pruning the list.
-     * The list is pruned by eliminating records that 
-     * are older than the item positioned at HISTORY_LENGTH
-     * in the recent list, when it is ordered by created
-     * date.
-     */
-//    private void cleanupOutdatedRecords()
-//    {
-//        try
-//        {            
-//            conn.execSQL("SELECT 1");
-//        }
-//        catch (SQLException e)
-//        {
-//            Log.w("Recent Location", "Failed to truncate recent list. List may continue to grow.");
-//        }
-//    }
-    
-    
+		public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	{ 
+			return conn.query(PlaceBookDB.SQL_LISTS_TABLE, projection, "_id=" + uri.getPathLeafId(), null, null, null, null);
+		}
+    }
 }

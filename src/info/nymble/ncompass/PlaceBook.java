@@ -1,14 +1,26 @@
 package info.nymble.ncompass;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.location.Location;
 import android.net.ContentURI;
 
 
+/**
+ * Helper class defining the PlaceBookProvider's managed
+ * types and gives helper methods for external parties
+ * to call to make changes or access the database.
+ * 
+ * @author Andrew Evenson
+ *
+ */
 public final class PlaceBook
 {
-    public static final ContentURI CONTENT_URI = ContentURI.create("content://info.nymble.ncompass.placebook");
-    public static final String MIME_DIRECTORY = "vnd.info.nymble.cursor.dir";
-    public static final String MIME_ITEM = "vnd.info.nymble.cursor.item";
-    public static final String MIME_BASE = "/ncompass.placebook.";
+    static final ContentURI CONTENT_URI = ContentURI.create("content://info.nymble.ncompass.placebook");
+    static final String MIME_DIRECTORY = "vnd.info.nymble.cursor.dir";
+    static final String MIME_ITEM = "vnd.info.nymble.cursor.item";
+    static final String MIME_BASE = "/ncompass.placebook.";
     
     
     
@@ -33,6 +45,55 @@ public final class PlaceBook
         public static final String LIST = "list";        
         public static final String UPDATED = "updated";
         public static final String INFO = "info";
+        
+        private static final String DEFAULT_ORDER = "list ASC, updated DESC";
+        
+        
+        public static ContentURI add(ContentResolver resolver, Location location, long listId)
+        {
+        	return add(resolver, location, listId, null);
+        }
+        
+        public static ContentURI add(ContentResolver resolver, Location location, long listId, String info)
+        {
+			ContentValues values = new ContentValues();
+			
+			values.put(Places.LAT, location.getLatitude());
+			values.put(Places.LON, location.getLongitude());
+			if (location.hasAltitude()) values.put(Places.ALT, location.getAltitude());
+			if (info != null) values.put(Places.INFO, info);
+			values.put(Places.LIST, listId);
+			
+			return resolver.insert(Places.PLACES_URI, values);
+        }
+
+        public static void delete(ContentResolver resolver, long id)
+        {
+        	resolver.delete(Places.PLACES_URI.addId(id), null, null);
+        }
+
+        public static void update(ContentResolver resolver, long id, String title, ContentURI picture, ContentURI contact)
+        {
+        	ContentValues values = new ContentValues();
+			
+			if (title != null) values.put(Places.TITLE, title);
+			if (picture != null) values.put(Places.PICTURE, picture.toString());
+			if (contact != null) values.put(Places.CONTACT, contact.toString());
+
+			resolver.update(Places.PLACES_URI.addId(id), values, null, null);
+        }
+
+        public static Cursor get(ContentResolver resolver, long id)
+        {
+        	return resolver.query(Places.PLACES_URI.addId(id), null, null, null, null);
+        }
+        
+        public static Cursor query(ContentResolver resolver, long listId)
+        {
+        	String list = LIST + "=" + listId;
+        	
+        	return resolver.query(Places.PLACES_URI, null, list, null, DEFAULT_ORDER);        	
+        }
     }
     
     
@@ -71,6 +132,46 @@ public final class PlaceBook
         public static final String CAPACITY = "capacity";
         public static final String IS_SEQUENCE = "is_sequence";
         public static final String IS_SYSTEM = "is_system";
+        
+        
+        
+        
+      
+        
+        public static ContentURI add(ContentResolver resolver, String name)
+        {
+        	return add(resolver, name, 4, false, false);
+        }
+        
+        public static ContentURI add(ContentResolver resolver, String name, int capacity, boolean isSequence, boolean isSystem)
+        {
+			ContentValues values = new ContentValues();
+			
+			values.put(Lists.NAME, name);
+			values.put(Lists.CAPACITY, capacity);
+			values.put(Lists.IS_SEQUENCE, isSequence);
+			values.put(Lists.IS_SYSTEM, isSystem);
+			
+			return resolver.insert(Lists.LISTS_URI, values);
+        }
+
+        
+        public static void delete(ContentResolver resolver, long id)
+        {
+        	resolver.delete(Lists.LISTS_URI.addId(id), null, null);
+        }     
+        
+        
+        public static Cursor get(ContentResolver resolver, long id)
+        {
+        	return resolver.query(LISTS_URI.addId(id), null, null, null, null);
+        }
+        
+        
+        public static Cursor query(ContentResolver resolver)
+        {
+        	return resolver.query(LISTS_URI, null, null, null, null);
+        }
     }
     
     
