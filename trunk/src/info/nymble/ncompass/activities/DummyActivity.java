@@ -46,17 +46,25 @@ public class DummyActivity extends Activity
         
         
 //        Places.update(getContentResolver(), 39, "Best place on earth", null, null);
-        Places.add(getContentResolver(), l3, 4);
+//        Places.add(getContentResolver(), l3, 4);
         
 
 //        Places.delete(getContentResolver(), 33);
         
-        Cursor c = Places.query(getContentResolver(), 4);
+        Cursor c =  Lists.query(getContentResolver());
         PlaceBookDB.printCursor(c);
         
-        c =  Lists.query(getContentResolver());
+        c = Places.query(getContentResolver(), 1);
         PlaceBookDB.printCursor(c);
-
+        
+        c = Places.query(getContentResolver(), 2);
+        PlaceBookDB.printCursor(c);
+        
+        c = Places.query(getContentResolver(), 3);
+        PlaceBookDB.printCursor(c);
+        
+        c = Places.query(getContentResolver(), 4);
+        PlaceBookDB.printCursor(c);
 	}
 
     
