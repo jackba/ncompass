@@ -8,6 +8,7 @@ import info.nymble.ncompass.view.GalleryBackground;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -20,6 +21,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewInflate;
+import android.view.Menu.Item;
 import android.widget.AdapterView;
 import android.widget.Gallery;
 import android.widget.GalleryAdapter;
@@ -39,7 +41,7 @@ public class PlaceListActivity extends Activity
     TextView emptyText;
     
     PlaceListAdapter placeListAdapter;
-    
+    MenuManager menu;
     
     
     
@@ -75,40 +77,14 @@ public class PlaceListActivity extends Activity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        final Intent newListIntent = new Intent(this, AddListActivity.class);
-
-        menu.add(1, 1, "New List", new Runnable()
-        {
-            public void run()
-            {
-                startSubActivity(newListIntent, 1);
-            }
-        }
-        );
-        
-        
-        menu.add(1, 2, "Delete List", new Runnable()
-        {
-            public void run()
-            {
-                removeList();
-            }
-        }
-        );
-        
-        
-        menu.addSeparator(0, 0);
-        
-        menu.add(2, 1, "Delete Place", new Runnable()
-        {
-            public void run()
-            {
-            	removePlace();
-            }
-        }
-        );
-        
-        
+    	this.menu = new MenuManager(this, menu);
+        return true;
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+    	this.menu.prepare();
         return true;
     }
     
@@ -185,6 +161,7 @@ public class PlaceListActivity extends Activity
                         	displayLoadedState();
                         }
                     });
+
                 }
                 
                 public synchronized void pause()
@@ -235,6 +212,74 @@ public class PlaceListActivity extends Activity
     }
     
 
+    
+    
+    
+    
+    private class MenuManager
+    {
+    	Menu menu;
+    	
+    	Item newList;
+    	Item deleteList;
+    	
+    	Item placeSeparator;
+    	Item deletePlace;
+    	
+    	
+    	
+    	MenuManager(final Context context, Menu menu)
+    	{
+    		this.menu = menu;
+
+            newList = menu.add(1, 1, "New List", new Runnable()
+            {
+                public void run()
+                {
+                	Intent newListIntent = new Intent(context, AddListActivity.class);
+                    startSubActivity(newListIntent, 1);
+                }
+            }
+            );
+            
+            
+            deleteList = menu.add(1, 2, "Delete List", new Runnable()
+            {
+                public void run()
+                {
+                    removeList();
+                }
+            }
+            );
+            
+            
+     	
+            placeSeparator = menu.addSeparator(2, 0);
+            	
+            
+            deletePlace = menu.add(2, 1, "Delete Place", new Runnable()
+        	{
+        		public void run()
+        		{
+        			removePlace();
+        		}
+        	}
+        	);
+    		
+    	}
+    	
+    	
+    	public void prepare()
+    	{
+    		boolean showPlaces = placeListAdapter.getCount() > 0;
+    		
+    		placeSeparator.setShown(showPlaces);
+    		deletePlace.setShown(showPlaces);
+    	}
+    	
+    }
+    
+    
     
     
     
