@@ -35,9 +35,8 @@ public class PlaceListActivity extends Activity
     LocationTracker tracker;
     Gallery gallery;
     ListView list;
-    TextView loading;
-    
-    
+    TextView loadingText;
+    TextView emptyText;
     
     PlaceListAdapter placeListAdapter;
     
@@ -54,14 +53,15 @@ public class PlaceListActivity extends Activity
 
         gallery = (Gallery) findViewById(R.id.list_gallery);
         list = (ListView) findViewById(R.id.list_contents);
-        loading = (TextView) findViewById(R.id.list_loading);
-
+        loadingText = (TextView) findViewById(R.id.list_loading);
+        emptyText = (TextView) findViewById(R.id.list_empty);
+        
 
         gallery.setAdapter(new TextListAdapter(this));
-        gallery.setOnItemSelectedListener(new SelectionChangeListener(this));
+        gallery.setOnItemSelectedListener(new SelectionChangeListener());
         gallery.setPadding(10, 5, 10, 7);
         gallery.setBackground(new GalleryBackground(100, 0.8F));
-        	
+        gallery.setFocusable(false);
         
         placeListAdapter =  new PlaceListAdapter(this, tracker);
         list.setAdapter(placeListAdapter);  
@@ -113,7 +113,31 @@ public class PlaceListActivity extends Activity
     }
     
     
-    private void removeList()
+    
+    
+    
+    
+    @Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		Log.i(null, "key event code=" + keyCode + " event=" + event.toString());
+		
+		if (keyCode == 21)
+		{
+			gallery.setSelection(gallery.getSelectedItemIndex() - 1, true);
+		}
+		else if (keyCode == 22)
+		{
+			gallery.setSelection(gallery.getSelectedItemIndex() + 1, true);
+		}
+		else
+		{			
+			return super.onKeyUp(keyCode, event);
+		}
+		return false;
+	}
+
+
+	private void removeList()
     {
     	long listId = gallery.getSelectedItemId();
 
@@ -128,7 +152,7 @@ public class PlaceListActivity extends Activity
     	long placeId = list.getSelectedItemId();
 
         placeListAdapter.deletePlace(placeId);
-        updateUI();
+        displayLoadedState();
     }
     
     
@@ -141,38 +165,35 @@ public class PlaceListActivity extends Activity
     
     private class SelectionChangeListener implements OnItemSelectedListener
     {
-        Activity activity;
-        
-        SelectionChangeListener(Activity a)
-        {
-            activity = a;
-        }
 
         @SuppressWarnings("unchecked")
         public void onItemSelected(AdapterView parent, View v, int position, final long id)
         {
-//            Stopwatch.start();
-//            Stopwatch.stop("Finished selection");
-            
             Log.w("Selection Change", "selection changed in gallery position=" + position + " id=" + id);
-            list.setVisibility(View.GONE);
-            loading.setVisibility(View.VISIBLE);
-            
-            
-            
+            displayLoadingState();
+
             Thread t = new Thread()
             {
-                
                 public void run()
                 {
+                	pause();
                     placeListAdapter.setList(id);
                     handler.post(new Runnable()
                     {
                         public void run()
                         {
-                            updateUI();
+                        	displayLoadedState();
                         }
                     });
+                }
+                
+                public synchronized void pause()
+                {
+                	try 
+                	{
+                		wait(300);
+                	} 
+                	catch (Exception e){}
                 }
             };
             t.setName("Change List Loader " + id);
@@ -181,30 +202,41 @@ public class PlaceListActivity extends Activity
         }
 
         @SuppressWarnings("unchecked")
-        public void onNothingSelected(AdapterView arg0)
-        {
-            // TODO Auto-generated method stub
-            
-        }
+        public void onNothingSelected(AdapterView arg0){}
     }
     
     
     
-    private void updateUI()
+    void displayLoadingState()
+    {
+        list.setVisibility(View.GONE);
+        emptyText.setVisibility(View.GONE);
+        loadingText.setVisibility(View.VISIBLE);
+    }
+    
+    void displayLoadedState()
     {
         placeListAdapter.onChanged();
-        loading.setVisibility(View.GONE);
-        list.setVisibility(View.VISIBLE);
-        if (list.getCount() > 0) 
+        loadingText.setVisibility(View.GONE);
+        emptyText.setVisibility(View.GONE);
+        
+
+        if (placeListAdapter.getCount() > 0) 
         {
+        	list.setVisibility(View.VISIBLE);
         	list.takeFocus(View.FOCUS_FORWARD);
         }
         else
         {
-        	gallery.requestFocus();
+        	emptyText.setVisibility(View.VISIBLE);
+//        	gallery.requestFocus();
         	Log.i(null, "has no children");
         }
     }
+    
+
+    
+    
     
     
     
