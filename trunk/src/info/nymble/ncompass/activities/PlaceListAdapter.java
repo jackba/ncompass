@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.location.Location;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,6 +66,29 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         }
     }
 
+    
+    public void deletePlace(long placeId)
+    {
+    	Log.i(null, "deleting place id=" + placeId);
+    	
+    	if (list != null)
+    	{
+    		for (Iterator<Place> i = list.places.iterator(); i.hasNext();) {
+				Place p = i.next();
+				 
+				if (p.id == placeId)
+				{
+					 Log.i(null, "removed element from list");
+					 i.remove();
+					 break;
+				}
+			}
+    	}
+        Places.delete(activity.getContentResolver(), placeId);
+    }
+    
+    
+    
     
     
     

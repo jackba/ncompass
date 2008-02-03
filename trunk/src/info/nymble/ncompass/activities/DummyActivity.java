@@ -10,8 +10,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,17 +66,17 @@ public class DummyActivity extends Activity
 	}
 
     
-    private void f()
-    {
-        this.setContentView(R.layout.recent_location_entry);
-
-        ImageView i = (ImageView) findViewById(R.id.image_id);
-	    i.setImageResource(R.drawable.icon_compass);
-	    
-	    
-	    Display d = this.getWindowManager().getDefaultDisplay();
-	    Log.w(null, "screen dimensions h=" + d.getHeight() + " w=" + d.getWidth() + " orient=" + d.getOrientation());    	
-    }
+//    private void f()
+//    {
+//        this.setContentView(R.layout.recent_location_entry);
+//
+//        ImageView i = (ImageView) findViewById(R.id.image_id);
+//	    i.setImageResource(R.drawable.icon_compass);
+//	    
+//	    
+//	    Display d = this.getWindowManager().getDefaultDisplay();
+//	    Log.w(null, "screen dimensions h=" + d.getHeight() + " w=" + d.getWidth() + " orient=" + d.getOrientation());    	
+//    }
     
     
     
