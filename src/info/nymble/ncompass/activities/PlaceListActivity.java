@@ -3,7 +3,7 @@ package info.nymble.ncompass.activities;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
-import info.nymble.ncompass.PlaceBook.Places;
+import info.nymble.ncompass.view.GalleryBackground;
 
 import java.util.ArrayList;
 
@@ -29,7 +29,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlaceListActivity extends Activity
 {
-    final Handler handler = new Handler();
+    final static Handler handler = new Handler();
 
     
     LocationTracker tracker;
@@ -59,10 +59,16 @@ public class PlaceListActivity extends Activity
 
         gallery.setAdapter(new TextListAdapter(this));
         gallery.setOnItemSelectedListener(new SelectionChangeListener(this));
-
+        gallery.setPadding(10, 5, 10, 7);
+        gallery.setBackground(new GalleryBackground(100, 0.8F));
+        	
+        
         placeListAdapter =  new PlaceListAdapter(this, tracker);
         list.setAdapter(placeListAdapter);  
         
+        TextView empty = new TextView(this);
+        empty.setText("No places in list");
+        list.setEmptyView(empty);
     }
 
     
@@ -121,8 +127,7 @@ public class PlaceListActivity extends Activity
     {
     	long placeId = list.getSelectedItemId();
 
-        Log.i(null, "deleting place id=" + placeId);
-        Places.delete(getContentResolver(), placeId);
+        placeListAdapter.deletePlace(placeId);
         updateUI();
     }
     
@@ -155,7 +160,7 @@ public class PlaceListActivity extends Activity
             
             
             
-            new Thread()
+            Thread t = new Thread()
             {
                 
                 public void run()
@@ -169,7 +174,10 @@ public class PlaceListActivity extends Activity
                         }
                     });
                 }
-            }.start();
+            };
+            t.setName("Change List Loader " + id);
+            t.setPriority(t.getPriority() - 1);
+            t.start();
         }
 
         @SuppressWarnings("unchecked")
@@ -187,7 +195,15 @@ public class PlaceListActivity extends Activity
         placeListAdapter.onChanged();
         loading.setVisibility(View.GONE);
         list.setVisibility(View.VISIBLE);
-        list.takeFocus(View.FOCUS_FORWARD);
+        if (list.getCount() > 0) 
+        {
+        	list.takeFocus(View.FOCUS_FORWARD);
+        }
+        else
+        {
+        	gallery.requestFocus();
+        	Log.i(null, "has no children");
+        }
     }
     
     
@@ -209,6 +225,20 @@ public class PlaceListActivity extends Activity
             activity = a;
             inflate = a.getViewInflate();
             loadData();
+            
+            
+            a.getContentResolver().registerContentObserver(Lists.LISTS_URI, false, 
+            new ContentObserver(handler)
+            {
+				@Override
+				public void onChange(boolean selfChange) 
+				{
+					super.onChange(selfChange);
+					Log.i(null, "Something Changed!");
+					loadData();
+					onChanged();
+				}
+            });
         }
         
         

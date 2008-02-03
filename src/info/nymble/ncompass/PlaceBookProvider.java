@@ -8,6 +8,7 @@ import info.nymble.ncompass.PlaceBook.Places;
 import java.util.HashMap;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.ContentURIParser;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,7 +27,7 @@ public class PlaceBookProvider  extends ContentProvider
     private ContentURIParser parser = null;   
     private SQLiteDatabase conn = null;
     
-    
+    private ContentResolver resolver;
     
     public PlaceBookProvider()
     {
@@ -81,6 +82,7 @@ public class PlaceBookProvider  extends ContentProvider
         Log.i("Context Info", "" + c.getPackageName());
         Log.i("Context Info", "" + c.getPackagePath());
 
+        resolver = c.getContentResolver();
         conn = new PlaceBookDB().openDatabase(c, PlaceBookDB.FILE_NAME, null, PlaceBookDB.VERSION);
         return conn != null;
     }
@@ -174,6 +176,7 @@ public class PlaceBookProvider  extends ContentProvider
 	        long listId = values.getAsLong(Places.LIST);
 	        long placeList = getPlaceListEntry(listId, placeId, values.getAsString(Places.INFO));
 
+	        resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
 	        return placeList;
 	    }
 	    
@@ -247,11 +250,13 @@ public class PlaceBookProvider  extends ContentProvider
     {
 		public int delete(long id) 
 		{
+			long listId = findList(id);
 			int affected = conn.delete("PlaceLists", "_id=" + id, PlaceBookDB.EMPTY_ARGS);
 			
 			if (affected > 0)
 			{
 				conn.execSQL(PlaceBookDB.SQL_PLACES_CLEANUP);
+				resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
 			}
 			
 			return affected;
@@ -265,13 +270,28 @@ public class PlaceBookProvider  extends ContentProvider
 		public int update(long id, ContentValues values) 
 		{
 			Cursor c = query(Places.PLACES_URI.addId(id), new String[]{"place"}, null, null, null, null, null);
+			long listId = findList(id);
+			int affected = 0;
 			
 			if (c.first())
 			{
-				return conn.update("Places", values, "_id=" + c.getLong(0), null);
+				affected = conn.update("Places", values, "_id=" + c.getLong(0), null);
+				resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
 			}
 			
-			return 0;
+			return affected;
+		}
+		
+		private long findList(long placeId)
+		{
+			Cursor c = conn.query(PlaceBookDB.SQL_PLACES_LIST, new String[]{String.valueOf(placeId)});
+			
+			if (c.first())
+			{
+				return c.getLong(0);
+			}
+			
+			return -1;
 		}
     }
     
@@ -285,7 +305,10 @@ public class PlaceBookProvider  extends ContentProvider
     	
 		public ContentURI insert(ContentValues values) 
 		{
-			return Lists.LISTS_URI.addId(conn.insert("Lists", "_empty", values));
+			ContentURI uri = Lists.LISTS_URI.addId(conn.insert("Lists", "_empty", values));;
+			
+			resolver.notifyChange(Lists.LISTS_URI, null);
+			return uri;
 		}
     }
     
@@ -294,7 +317,10 @@ public class PlaceBookProvider  extends ContentProvider
     {
 		public int delete(long id) 
 		{
-			return conn.delete("Lists", "_id=" + id, PlaceBookDB.EMPTY_ARGS);
+			int affected = conn.delete("Lists", "_id=" + id, PlaceBookDB.EMPTY_ARGS);
+			
+			resolver.notifyChange(Lists.LISTS_URI, null);
+			return affected;
 		}
 
 		public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)

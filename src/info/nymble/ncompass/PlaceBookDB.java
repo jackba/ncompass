@@ -28,6 +28,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
         static String SQL_PLACES_SELECT_ENTRY;
         static String SQL_PLACES_COMPACT;
         static String SQL_PLACES_CLEANUP;
+        static String SQL_PLACES_LIST;
         
         static
         {
@@ -67,6 +68,7 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
 									"ORDER BY c1.date DESC, c1._id DESC ";
             
             SQL_PLACES_CLEANUP = "DELETE FROM Places WHERE _id NOT IN (SELECT place FROM PlaceLists);";
+            SQL_PLACES_LIST = "SELECT list FROM PlaceLists WHERE _id=?";
         }
 
         
