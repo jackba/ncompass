@@ -7,24 +7,155 @@ import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.PlaceBook.Places;
 import android.app.Activity;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.DataSetObserver;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SpinnerAdapter;
 
 public class DummyActivity extends Activity
 {
 
     
-    @Override
-    protected void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
-        
+@Override
+protected void onCreate(Bundle icicle) {
+    super.onCreate(icicle);
+    
+    testGallery(this);
+    testList(this);
+}
+
+
+
+
+static void testList(Context c)
+{
+    ListView l = new ListView(c);
+    TestAdapter a = new TestAdapter();
+    
+    l.setAdapter(a);
+    l.setFocusable(true);
+    
+    Log.i(null, "list.isFocusable=" + l.isFocusable());
+    
+    a.change(new long[]{271828182, 314159265});
+    
+    Log.i(null, "list.isFocusable=" + l.isFocusable());
+}
+
+static void testGallery(Context c)
+{
+    Gallery g = new Gallery(c);
+    TestAdapter a = new TestAdapter();
+    
+    g.setAdapter(a);
+    g.setFocusable(false);
+    
+    Log.i(null, "gallery.isFocusable=" + g.isFocusable());
+    
+    a.change(new long[]{271828182, 314159265});
+    
+    Log.i(null, "gallery.isFocusable=" + g.isFocusable());
+}
+
+
+
+
+static class TestAdapter implements SpinnerAdapter, ListAdapter
+{
+	ContentObserver cObserver;
+	DataSetObserver dObserver;        	
+	long[] values = new long[]{271828182};
+
+	
+	public void change(long[] values)
+	{
+		Log.i(null, "sending change notification to " + cObserver.getClass());
+		this.values = values;
+		cObserver.onChange(false);
+		dObserver.onChanged();
+	}
+	
+	
+	public View getDropDownView(int position, View convertView,
+			ViewGroup parent) {
+		return null;
+	}
+
+	public View getMeasurementView(ViewGroup arg0) {
+		return null;
+	}
+
+	public int getCount() {
+		return values.length;
+	}
+
+	public Object getItem(int position) {
+		return values[position];
+	}
+
+	public long getItemId(int position) {
+		return values[position];
+	}
+
+	public int getNewSelectionForKey(int currentSelection, int keyCode,
+			KeyEvent event) {
+		return currentSelection;
+	}
+
+	public View getView(int position, View convertView, ViewGroup parent) {
+		return null;
+	}
+
+	public void registerContentObserver(ContentObserver observer) {
+		cObserver = observer;
+	}
+
+	public void registerDataSetObserver(DataSetObserver observer) {
+		dObserver = observer;
+	}
+
+	public boolean stableIds() {
+		return true;
+	}
+
+	public void unregisterContentObserver(ContentObserver observer) {
+	}
+
+	public void unregisterDataSetObserver(DataSetObserver observer) {
+	}
+
+
+	public boolean areAllItemsSelectable() {
+		return true;
+	}
+
+
+	public boolean isSelectable(int arg0) {
+		return true;
+	}
+}
+    
+    
+    
+    
+    
+    
+    
+    public void g()
+    {
+    	
         Location l = new Location();
         l.setLatitude(192.34254857);
         l.setLongitude(-47.3427534295);

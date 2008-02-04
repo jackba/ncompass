@@ -5,7 +5,10 @@ import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.view.GalleryBackground;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,6 +16,7 @@ import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.net.ContentURI;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -31,8 +35,11 @@ import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlaceListActivity extends Activity
 {
+	final static int LIST_ADDED = 1001;
+	
     final static Handler handler = new Handler();
 
+    
     
     LocationTracker tracker;
     Gallery gallery;
@@ -41,7 +48,9 @@ public class PlaceListActivity extends Activity
     TextView emptyText;
     
     PlaceListAdapter placeListAdapter;
+    TextListAdapter galleryAdapter;
     MenuManager menu;
+    ListLoader loader = new ListLoader();
     
     
     
@@ -58,8 +67,8 @@ public class PlaceListActivity extends Activity
         loadingText = (TextView) findViewById(R.id.list_loading);
         emptyText = (TextView) findViewById(R.id.list_empty);
         
-
-        gallery.setAdapter(new TextListAdapter(this));
+        galleryAdapter = new TextListAdapter(this);
+        gallery.setAdapter(galleryAdapter);
         gallery.setOnItemSelectedListener(new SelectionChangeListener());
         gallery.setPadding(10, 5, 10, 7);
         gallery.setBackground(new GalleryBackground(100, 0.8F));
@@ -84,26 +93,46 @@ public class PlaceListActivity extends Activity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
+    	gallery.setFocusable(false);
     	this.menu.prepare();
         return true;
     }
     
-    
-    
-    
-    
-    
+
     @Override
-	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		Log.i(null, "key event code=" + keyCode + " event=" + event.toString());
+	protected void onActivityResult(int requestCode, int resultCode, String data, Bundle extras) 
+    {
+		super.onActivityResult(requestCode, resultCode, data, extras);
 		
+		if (requestCode==LIST_ADDED)
+		{
+			try 
+			{
+				ContentURI uri = new ContentURI(data);
+				int position = galleryAdapter.findPosition(uri.getPathLeafId());
+				
+				gallery.setSelection(position);
+			} catch (URISyntaxException e) {}
+		}
+		
+		
+	}
+
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		int position = gallery.getSelectedItemIndex();
+		Log.i(null, "key event code=" + keyCode + " event=" + event.toString() + " pos=" + position);
+		Log.i(null, "gallery focus=" + gallery.isFocusable() + " windowFocus=" + gallery.hasWindowFocus());
+		
+		gallery.setFocusable(false);
 		if (keyCode == 21)
 		{
-			gallery.setSelection(gallery.getSelectedItemIndex() - 1, true);
+			gallery.setSelection(position - 1, true);
 		}
 		else if (keyCode == 22)
 		{
-			gallery.setSelection(gallery.getSelectedItemIndex() + 1, true);
+			gallery.setSelection(position + 1, true);
 		}
 		else
 		{			
@@ -141,41 +170,11 @@ public class PlaceListActivity extends Activity
     
     private class SelectionChangeListener implements OnItemSelectedListener
     {
-
         @SuppressWarnings("unchecked")
         public void onItemSelected(AdapterView parent, View v, int position, final long id)
         {
-            Log.w("Selection Change", "selection changed in gallery position=" + position + " id=" + id);
             displayLoadingState();
-
-            Thread t = new Thread()
-            {
-                public void run()
-                {
-                	pause();
-                    placeListAdapter.setList(id);
-                    handler.post(new Runnable()
-                    {
-                        public void run()
-                        {
-                        	displayLoadedState();
-                        }
-                    });
-
-                }
-                
-                public synchronized void pause()
-                {
-                	try 
-                	{
-                		wait(300);
-                	} 
-                	catch (Exception e){}
-                }
-            };
-            t.setName("Change List Loader " + id);
-            t.setPriority(t.getPriority() - 1);
-            t.start();
+            loader.setList(id);
         }
 
         @SuppressWarnings("unchecked")
@@ -206,12 +205,11 @@ public class PlaceListActivity extends Activity
         else
         {
         	emptyText.setVisibility(View.VISIBLE);
-//        	gallery.requestFocus();
-        	Log.i(null, "has no children");
         }
     }
     
-
+    
+    
     
     
     
@@ -237,7 +235,7 @@ public class PlaceListActivity extends Activity
                 public void run()
                 {
                 	Intent newListIntent = new Intent(context, AddListActivity.class);
-                    startSubActivity(newListIntent, 1);
+                    startSubActivity(newListIntent, LIST_ADDED);
                 }
             }
             );
@@ -282,13 +280,61 @@ public class PlaceListActivity extends Activity
     
     
     
+    private class ListLoader
+    {
+    	private Timer timer = new Timer();
+    	private long listId = -1;
+    	private Object lock = "listID lock";
+    	
+    	
+    	
+    	
+    	public void setList(final long id)
+    	{
+    		synchronized (lock)
+    		{    			
+    			this.listId = id;
+    		}
+    		
+    		timer.schedule(new TimerTask(){
+				public void run() 
+				{	
+					if (stillValid(id)){
+						placeListAdapter.setList(id);
+					}
+						
+					if (stillValid(id)){
+						handler.post(new Runnable()
+						{
+							public void run()
+							{
+								displayLoadedState();
+							}
+						});						
+					}
+						;
+				}}, 300);
+    	}
+    	
+    	public boolean stillValid(long id)
+    	{
+    		synchronized (lock)
+    		{
+    			return id == this.listId;
+    		}
+    	}
+    }
     
     
     
-    private static class TextListAdapter extends ObserverManager implements GalleryAdapter
+    
+    
+    
+    private class TextListAdapter extends ObserverManager implements GalleryAdapter
     {
         ArrayList<ContentObserver> contentObservers = new ArrayList<ContentObserver>();
         ArrayList<DataSetObserver> datasetObservers = new ArrayList<DataSetObserver>();
+        View measureView;
         
         Activity activity;
         ViewInflate inflate;
@@ -296,28 +342,34 @@ public class PlaceListActivity extends Activity
         String[] names;
         
         
-        
         public TextListAdapter(Activity a)
         {
             activity = a;
             inflate = a.getViewInflate();
+            measureView = inflate.inflate(R.layout.list_entry, null, null);
+            
             loadData();
-            
-            
+
             a.getContentResolver().registerContentObserver(Lists.LISTS_URI, false, 
             new ContentObserver(handler)
             {
 				@Override
 				public void onChange(boolean selfChange) 
 				{
-					super.onChange(selfChange);
-					Log.i(null, "Something Changed!");
 					loadData();
 					onChanged();
+					gallery.setFocusable(false);
 				}
             });
         }
+
         
+        
+        
+        private boolean inRange(int position)
+        {
+        	return 0 <= position && position < ids.length;
+        }
         
         public int getCount()
         {
@@ -326,12 +378,24 @@ public class PlaceListActivity extends Activity
 
         public Object getItem(int position)
         {
-            return names[position];
+        	if (inRange(position))return names[position];
+        	return null;
         }
 
+        
+        public int findPosition(long id)
+        {
+        	for (int i = 0; i < ids.length; i++) 
+        	{
+				if (ids[i] == id) return i;
+			}
+        	return -1;
+        }
+        
         public long getItemId(int position)
         {
-            return ids[position];
+        	if (inRange(position)) return ids[position];
+        	return -1;
         }
 
         public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
@@ -367,14 +431,12 @@ public class PlaceListActivity extends Activity
 
         public View getMeasurementView(ViewGroup arg0)
         {
-            View v = inflate.inflate(R.layout.list_entry, null, null);
-            
-            return v;
+            return measureView;
         }
         
         public float getScale(boolean focused, int offset)
         {
-            return offset == 0 ? 1.0F : 0.75F;   
+            return offset == 0 ? 1.0F : 0.8F;   
         }
         
         public float getAlpha(boolean focused, int offset)
@@ -413,4 +475,7 @@ public class PlaceListActivity extends Activity
             }
         }
     }
+    
+    
+    
 }
