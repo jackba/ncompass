@@ -37,6 +37,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
 	Location location;	
 	List list;
     
+	PlaceView measureView;
 
     
     public PlaceListAdapter(Activity a, LocationTracker t)
@@ -45,6 +46,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         this.tracker = t;
         
         views = new PlaceViewCheckout(a.getViewInflate());
+        measureView = views.checkout();
     }
     
     
@@ -104,7 +106,15 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
 
     public int getCount()
     {
-    	return ( list == null ? 0 : list.places.size() );
+    	List l = list;
+    	if (l == null)
+    	{
+    		return 0;
+    	}
+    	else
+    	{    		
+    		return l.places.size() ;
+    	}
     }
 
     public Object getItem(int position)
@@ -114,7 +124,15 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
 
     public long getItemId(int position)
     {
-        return ( list == null ? -1 : list.places.get(position).id );
+    	List l = list;
+    	if (l == null || l.places.size() <= position)
+    	{
+    		return -1;
+    	}
+    	else
+    	{    		
+    		return l.places.get(position).id ;
+    	}
     }
 
     public int getNewSelectionForKey(int currentSelection, int keyCode, KeyEvent event)
@@ -129,28 +147,23 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     
     public View getView(int position, View convertView, ViewGroup parent)
     {
-    	if (list == null) return null;
-    	Place p = list.places.get(position);
-    	PlaceView view = p.view;
+    	List l = list;
+    	if (l == null || l.places.size() <= position) return measureView.view;
     	
-    	Stopwatch.start();
-    	if (view == null)
-    	{
-    		p.view = views.checkout();
-    		p.view.dateText.setText(p.getDate());
-    		p.view.distanceText.setText(Format.formatDistance(location.distanceTo(p.location)));
-    		p.view.titleText.setText(p.title);
+    	Place p = list.places.get(position);
+    	if (p == null) return measureView.view; 
+    	
+    	PlaceView view = p.view;
+    	if (view != null) return view.view;
+    	
+    	
+    	view = views.checkout();
+		view.dateText.setText(p.getDate());
+		view.distanceText.setText(Format.formatDistance(location.distanceTo(p.location)));
+		view.titleText.setText(p.title);
+		p.view = view;
 
-    		view = p.view;
-    		Stopwatch.stop( "built view for p=" + position + " id=" + p.id);
-    	}
-    	else
-    	{
-    		view = p.view;
-    		Stopwatch.stop( "retrieved view for p=" + position + " id=" + p.id);
-    	}
-        
-        return view.view;
+		return view.view;
     }
     
     

@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import android.database.ContentObserver;
 import android.database.DataSetObserver;
+import android.util.Log;
 
 public class ObserverManager
 {
@@ -15,10 +16,15 @@ public class ObserverManager
     
     public void onChanged()
     {
-//        for (Iterator<ContentObserver> i = contentObservers.iterator(); i.hasNext();)
-//        {
-//            i.next().onChange(false);
-//        }
+    	
+    	
+        for (Iterator<ContentObserver> i = contentObservers.iterator(); i.hasNext();)
+        {
+        	ContentObserver o = i.next();
+        	
+        	Log.w(null, "sending change notification to o=" + o.getClass());
+            o.onChange(false);
+        }
         
         for (Iterator<DataSetObserver> i = datasetObservers.iterator(); i.hasNext();)
         {
