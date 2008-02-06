@@ -3,6 +3,7 @@ package info.nymble.ncompass.activities;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
+import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.GalleryBackground;
 
 import java.net.URISyntaxException;
@@ -16,6 +17,7 @@ import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.location.Location;
 import android.net.ContentURI;
 import android.os.Bundle;
 import android.os.Handler;
@@ -161,9 +163,62 @@ public class PlaceListActivity extends Activity
     }
     
     
+    private void addHere()
+    {
+    	
+    	long listId = gallery.getSelectedItemId();
+
+        placeListAdapter.addPlace(listId);
+        displayLoadedState();
+    }
     
     
+    private void targetPlace()
+    {
+    	long placeId = list.getSelectedItemId();
+    	Cursor c = Places.get(this.getContentResolver(), placeId);  
+
+    	if ( c.first() )
+    	{    		
+			Location location = new Location();
+			location.setLatitude( Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) ));
+			location.setLongitude( Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) ));
+			
+			Intent i = new Intent(Intent.VIEW_ACTION);
+			
+			
+			i.putExtra("Location", location);
+			i.setClass(this, TargetCompassActivity.class);
+			
+			Log.w(null, "loading map at location=" + location);
+			this.startActivity(i);
+    	}
+    }
     
+    
+    private void mapPlace()
+    {
+    	long placeId = list.getSelectedItemId();
+    	Cursor c = Places.get(this.getContentResolver(), placeId);  
+
+    	if ( c.first() )
+    	{    		
+    		try 
+    		{    			
+    			double lat = Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) );
+    			double lon = Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) );
+    			ContentURI uri = new ContentURI("geo:" + lat + "," + lon);
+    			Intent i = new Intent(Intent.VIEW_ACTION, uri);
+    		
+    			Log.w(null, "loading map at uri=" + uri);
+    			this.startActivity(i);
+    		}
+    		catch (URISyntaxException e) 
+    		{
+    			Log.w(null, "failed to map place", e);
+    		}
+    	}
+    }
     
     
     
@@ -222,8 +277,13 @@ public class PlaceListActivity extends Activity
     	Item deleteList;
     	
     	Item placeSeparator;
+    	Item copyPlace;
     	Item deletePlace;
-    	
+    	Item targetPlace;
+    	Item mapPlace;
+
+    	Item hereSeparator;
+    	Item addHere;
     	
     	
     	MenuManager(final Context context, Menu menu)
@@ -253,7 +313,7 @@ public class PlaceListActivity extends Activity
             
      	
             placeSeparator = menu.addSeparator(2, 0);
-            	
+    		
             
             deletePlace = menu.add(2, 1, "Delete Place", new Runnable()
         	{
@@ -263,7 +323,49 @@ public class PlaceListActivity extends Activity
         		}
         	}
         	);
-    		
+            
+            copyPlace = menu.add(2, 2, "Copy Place", new Runnable()
+        	{
+        		public void run()
+        		{
+//        			removePlace();
+        		}
+        	}
+        	);
+            
+            
+            
+            targetPlace = menu.add(2, 3, "Target Place", new Runnable()
+        	{
+        		public void run()
+        		{
+        			targetPlace();
+        		}
+        	}
+        	);
+            
+            
+            mapPlace = menu.add(2, 4, "Map Place", new Runnable()
+        	{
+        		public void run()
+        		{
+        			mapPlace();
+        		}
+        	}
+        	);
+            
+            
+            
+            hereSeparator = menu.addSeparator(3, 0);
+            
+            addHere = menu.add(3, 1, "Add Here", new Runnable()
+        	{
+        		public void run()
+        		{
+        			addHere();
+        		}
+        	}
+        	);
     	}
     	
     	
@@ -272,7 +374,10 @@ public class PlaceListActivity extends Activity
     		boolean showPlaces = placeListAdapter.getCount() > 0;
     		
     		placeSeparator.setShown(showPlaces);
+    		copyPlace.setShown(showPlaces);
     		deletePlace.setShown(showPlaces);
+    		targetPlace.setShown(showPlaces);
+    		mapPlace.setShown(showPlaces);
     	}
     	
     }

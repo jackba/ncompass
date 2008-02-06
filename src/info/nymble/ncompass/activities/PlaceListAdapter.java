@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.location.Location;
+import android.net.ContentURI;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -89,6 +90,21 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         Places.delete(activity.getContentResolver(), placeId);
     }
     
+    public void addPlace(long listId)
+    {
+    	Log.i(null, "adding place to list id=" + listId);
+    	
+    	if (list != null)
+    	{
+    		location = tracker.getCurrentLocation();
+    		ContentResolver resolver = activity.getContentResolver();
+    		ContentURI place = Places.add(resolver, location, listId);
+    		Cursor c = Places.get(resolver, place.getPathLeafId());
+    		    		
+    		list.loadDataFromCursor(c, list.places);
+    	}
+    }
+    
     
     
     
@@ -154,7 +170,11 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     	if (p == null) return measureView.view; 
     	
     	PlaceView view = p.view;
-    	if (view != null) return view.view;
+    	if (view != null)
+    	{
+    		view.distanceText.setText(Format.formatDistance(location.distanceTo(p.location)));
+    		return view.view;
+    	}
     	
     	
     	view = views.checkout();
@@ -206,7 +226,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         }
         
     	
-        private void loadDataFromCursor(Cursor c, ArrayList<Place> places)
+        void loadDataFromCursor(Cursor c, ArrayList<Place> places)
         {
             Stopwatch.start();
             int id = c.getColumnIndex(Places.ID);
