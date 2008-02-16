@@ -36,6 +36,7 @@
 
 
      	<activity class=".activities.DummyActivity"  android:label="Dummy Activity"/>
+     	<activity class=".activities.SignpostActivity"  android:label="Signpost Activity"/>
      	
 		<activity class=".activities.AddListActivity" android:label="@string/new_list_title">
             <intent-filter>
