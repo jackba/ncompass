@@ -10,13 +10,19 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.Camera;
+import android.graphics.Matrix;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
@@ -26,15 +32,78 @@ import android.widget.SpinnerAdapter;
 
 public class DummyActivity extends Activity
 {
-
-    
+	 ImageView i1;
+	 ImageView i2;
+	 
+	 
 @Override
 protected void onCreate(Bundle icicle) {
     super.onCreate(icicle);
     
-    testGallery(this);
-    testList(this);
+//    testGallery(this);
+//    testList(this);
+
+    
+    i1 = new ImageView(this);
+    i1.setImageResource(R.drawable.gallery_photo_1);
+    
+    i2 = new ImageView(this);
+    i2.setImageResource(R.drawable.gallery_photo_2);
+    
+    this.setContentView(i1);
 }
+
+
+
+@Override
+public boolean onKeyUp(int keyCode, KeyEvent event) {
+	Log.i(null, "onKeyUp event occurred");
+	
+	;
+	animate(true);
+	
+	return super.onKeyUp(keyCode, event);
+}
+
+
+void animate(boolean out)
+{
+	float start = (out ? 0 : 90);
+	float end = 90 - start;
+	
+    final Rotate3dAnimation rotation =
+        new Rotate3dAnimation(start, end, i1.getWidth()/2.0f, i1.getHeight()/2.0f, i1.getWidth(), true);
+	rotation.setDuration(500);
+	rotation.setFillAfter(true);
+	rotation.setInterpolator(new AccelerateInterpolator());
+	if (out) rotation.setAnimationListener(new DisplayNextView());
+	
+	i1.startAnimation(rotation);	
+}
+
+
+
+
+
+private final class DisplayNextView implements Animation.AnimationListener {
+
+    public void onAnimationStart() {
+    }
+
+    public void onAnimationEnd() {
+    	ImageView i3 = i1;
+    	i1 = i2;
+    	i2 = i3;
+    	setContentView(i1);
+    	
+    	animate(false);
+    }
+
+    public void onAnimationRepeat() {
+    }
+}
+
+
 
 
 
@@ -72,6 +141,15 @@ static void testGallery(Context c)
 
 
 
+
+
+
+
+
+
+
+
+
 static class TestAdapter implements SpinnerAdapter, ListAdapter
 {
 	ContentObserver cObserver;
@@ -81,10 +159,21 @@ static class TestAdapter implements SpinnerAdapter, ListAdapter
 	
 	public void change(long[] values)
 	{
-		Log.i(null, "sending change notification to " + cObserver.getClass());
 		this.values = values;
-		cObserver.onChange(false);
-		dObserver.onChanged();
+		if (cObserver != null)
+		{
+			Log.i(null, "sending change notification to changeObserver " + cObserver.getClass());
+			cObserver.onChange(false);			
+		}
+		if (dObserver != null)
+		{			
+			Log.i(null, "sending change notification to dataObserver " + dObserver.getClass());
+			dObserver.onChanged();
+		}
+		if (dObserver == null && cObserver == null)
+		{			
+			Log.i(null, "both observer references are null");
+		}
 	}
 	
 	
@@ -274,5 +363,74 @@ static class TestAdapter implements SpinnerAdapter, ListAdapter
         );
         
         return true;
+    }
+}
+
+
+
+
+class Rotate3dAnimation extends Animation {
+    private final float mFromDegrees;
+    private final float mToDegrees;
+    private final float mCenterX;
+    private final float mCenterY;
+    private final float mDepthZ;
+    private final boolean mReverse;
+    private Camera mCamera;
+
+    /**
+     * Creates a new 3D rotation on the Y axis. The rotation is defined by its
+     * start angle and its end angle. Both angles are in degrees. The rotation
+     * is performed around a center point on the 2D space, definied by a pair
+     * of X and Y coordinates, called centerX and centerY. When the animation
+     * starts, a translation on the Z axis (depth) is performed. The length
+     * of the translation can be specified, as well as whether the translation
+     * should be reversed in time.
+     *
+     * @param fromDegrees the start angle of the 3D rotation
+     * @param toDegrees the end angle of the 3D rotation
+     * @param centerX the X center of the 3D rotation
+     * @param centerY the Y center of the 3D rotation
+     * @param reverse true if the translation should be reversed, false otherwise
+     */
+    public Rotate3dAnimation(float fromDegrees, float toDegrees,
+            float centerX, float centerY, float depthZ, boolean reverse) {
+        mFromDegrees = fromDegrees;
+        mToDegrees = toDegrees;
+        mCenterX = centerX;
+        mCenterY = centerY;
+        mDepthZ = depthZ;
+        mReverse = reverse;
+    }
+
+    @Override
+    public void initialize(int width, int height, int parentWidth, int parentHeight) {
+        super.initialize(width, height, parentWidth, parentHeight);
+        mCamera = new Camera();
+    }
+
+    @Override
+    protected void applyTransformation(float interpolatedTime, Transformation t) {
+        final float fromDegrees = mFromDegrees;
+        float degrees = fromDegrees + ((mToDegrees - fromDegrees) * interpolatedTime);
+
+        final float centerX = mCenterX;
+        final float centerY = mCenterY;
+        final Camera camera = mCamera;
+
+        final Matrix matrix = t.getMatrix();
+
+        camera.save();
+        if (mReverse) {
+            camera.translate(0.0f, 0.0f, mDepthZ * interpolatedTime);
+        } else {
+            camera.translate(0.0f, 0.0f, mDepthZ * (1.0f - interpolatedTime));
+        }
+        camera.rotateY(degrees);
+        camera.getMatrix(matrix);
+        camera.restore();
+
+        matrix.preTranslate(-centerX, -centerY);
+        matrix.postTranslate(centerX, centerY);
     }
 }

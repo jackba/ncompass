@@ -12,13 +12,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.location.Location;
-import android.net.ContentURI;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -108,13 +109,10 @@ public class PlaceListActivity extends Activity
 		
 		if (requestCode==LIST_ADDED)
 		{
-			try 
-			{
-				ContentURI uri = new ContentURI(data);
-				int position = galleryAdapter.findPosition(uri.getPathLeafId());
-				
-				gallery.setSelection(position);
-			} catch (URISyntaxException e) {}
+			Uri uri = Uri.parse(data);
+			int position = galleryAdapter.findPosition(ContentUris.parseId(uri));
+			
+			gallery.setSelection(position);
 		}
 		
 		
@@ -123,7 +121,7 @@ public class PlaceListActivity extends Activity
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		int position = gallery.getSelectedItemIndex();
+		int position = gallery.getSelectedItemPosition();
 		Log.i(null, "key event code=" + keyCode + " event=" + event.toString() + " pos=" + position);
 		Log.i(null, "gallery focus=" + gallery.isFocusable() + " windowFocus=" + gallery.hasWindowFocus());
 		
@@ -203,20 +201,13 @@ public class PlaceListActivity extends Activity
 
     	if ( c.first() )
     	{    		
-    		try 
-    		{    			
-    			double lat = Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) );
-    			double lon = Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) );
-    			ContentURI uri = new ContentURI("geo:" + lat + "," + lon);
-    			Intent i = new Intent(Intent.VIEW_ACTION, uri);
-    		
-    			Log.w(null, "loading map at uri=" + uri);
-    			this.startActivity(i);
-    		}
-    		catch (URISyntaxException e) 
-    		{
-    			Log.w(null, "failed to map place", e);
-    		}
+			double lat = Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) );
+			double lon = Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) );
+			Uri uri = Uri.parse("geo:" + lat + "," + lon);
+			Intent i = new Intent(Intent.VIEW_ACTION, uri);
+		
+			Log.w(null, "loading map at uri=" + uri);
+			this.startActivity(i);
     	}
     }
     
@@ -255,7 +246,7 @@ public class PlaceListActivity extends Activity
         if (placeListAdapter.getCount() > 0) 
         {
         	list.setVisibility(View.VISIBLE);
-        	list.takeFocus(View.FOCUS_FORWARD);
+        	list.requestFocus(View.FOCUS_FORWARD);
         }
         else
         {
@@ -276,13 +267,13 @@ public class PlaceListActivity extends Activity
     	Item newList;
     	Item deleteList;
     	
-    	Item placeSeparator;
+//    	Item placeSeparator;
     	Item copyPlace;
     	Item deletePlace;
     	Item targetPlace;
     	Item mapPlace;
 
-    	Item hereSeparator;
+//    	Item hereSeparator;
     	Item addHere;
     	
     	
@@ -312,8 +303,8 @@ public class PlaceListActivity extends Activity
             
             
      	
-            placeSeparator = menu.addSeparator(2, 0);
-    		
+//            placeSeparator = menu.addSeparator(2, 0);
+//    		
             
             deletePlace = menu.add(2, 1, "Delete Place", new Runnable()
         	{
@@ -356,7 +347,7 @@ public class PlaceListActivity extends Activity
             
             
             
-            hereSeparator = menu.addSeparator(3, 0);
+//            hereSeparator = menu.addSeparator(3, 0);
             
             addHere = menu.add(3, 1, "Add Here", new Runnable()
         	{
@@ -373,7 +364,7 @@ public class PlaceListActivity extends Activity
     	{
     		boolean showPlaces = placeListAdapter.getCount() > 0;
     		
-    		placeSeparator.setShown(showPlaces);
+//    		placeSeparator.setShown(showPlaces);
     		copyPlace.setShown(showPlaces);
     		deletePlace.setShown(showPlaces);
     		targetPlace.setShown(showPlaces);

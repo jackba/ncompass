@@ -94,6 +94,19 @@ public class Format
     
     
     
+    public static String formatSpeed(double metersPerSecond)
+    {
+        StringBuffer buffer = new StringBuffer();
+
+        double inches = (m*metersPerSecond + b);
+        int chunk = chunkSizes.length - 1;
+        double value = (inches/chunkSizes[chunk])/3600;
+        
+        roundNumber(value, buffer);
+        buffer.append(chunkLabels[chunk] + "/hr");
+        return buffer.toString();
+    }
+    
     
     public static String formatDistance(double meters)
     {
@@ -103,23 +116,8 @@ public class Format
         int chunk = findChunk(inches);
         double value = inches/chunkSizes[chunk];
         
-        
-        if (value > 10)
-        {
-            numberFormat.setMaximumFractionDigits(0);
-        }
-        else if (value > 1)
-        {
-            numberFormat.setMaximumFractionDigits(1);
-        }
-        else
-        {
-            numberFormat.setMaximumFractionDigits(2);
-        }
-        
-        numberFormat.format(value, buffer, null);
+        roundNumber(value, buffer);
         buffer.append(chunkLabels[chunk]);
-        
         return buffer.toString();
     }
 
@@ -134,5 +132,32 @@ public class Format
             }
         }
         return 0;
+    }
+    
+    
+    public static String roundNumber(double number)
+    {
+        StringBuffer buffer = new StringBuffer();
+
+        roundNumber(number, buffer);
+        return buffer.toString();
+    }
+    
+    private static void roundNumber(double number, StringBuffer buffer)
+    {
+        if (number > 10)
+        {
+            numberFormat.setMaximumFractionDigits(0);
+        }
+        else if (number > 1)
+        {
+            numberFormat.setMaximumFractionDigits(1);
+        }
+        else
+        {
+            numberFormat.setMaximumFractionDigits(2);
+        }
+        
+        numberFormat.format(number, buffer, null);
     }
 }

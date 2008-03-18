@@ -4,7 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.location.Location;
-import android.net.ContentURI;
+import android.net.Uri;
 
 
 /**
@@ -17,7 +17,7 @@ import android.net.ContentURI;
  */
 public final class PlaceBook
 {
-    static final ContentURI CONTENT_URI = ContentURI.create("content://info.nymble.ncompass.placebook");
+    static final Uri CONTENT_URI = Uri.parse("content://info.nymble.ncompass.placebook");
     static final String MIME_DIRECTORY = "vnd.info.nymble.cursor.dir";
     static final String MIME_ITEM = "vnd.info.nymble.cursor.item";
     static final String MIME_BASE = "/ncompass.placebook.";
@@ -29,7 +29,7 @@ public final class PlaceBook
     public static final class Places
     {   
         public static final String PLACES_PATH = "places";
-        public static final ContentURI PLACES_URI = CONTENT_URI.addPath(PLACES_PATH);
+        public static final Uri PLACES_URI = Uri.withAppendedPath(CONTENT_URI, PLACES_PATH);
         
         
         public static final String ID = "_id";
@@ -49,12 +49,12 @@ public final class PlaceBook
         private static final String DEFAULT_ORDER = "list ASC, updated DESC";
         
         
-        public static ContentURI add(ContentResolver resolver, Location location, long listId)
+        public static Uri add(ContentResolver resolver, Location location, long listId)
         {
         	return add(resolver, location, listId, null);
         }
         
-        public static ContentURI add(ContentResolver resolver, Location location, long listId, String info)
+        public static Uri add(ContentResolver resolver, Location location, long listId, String info)
         {
 			ContentValues values = new ContentValues();
 			
@@ -69,10 +69,10 @@ public final class PlaceBook
 
         public static void delete(ContentResolver resolver, long id)
         {
-        	resolver.delete(Places.PLACES_URI.addId(id), null, null);
+        	resolver.delete(Uri.withAppendedPath(PLACES_URI, String.valueOf(id)), null, null);
         }
 
-        public static void update(ContentResolver resolver, long id, String title, ContentURI picture, ContentURI contact)
+        public static void update(ContentResolver resolver, long id, String title, Uri picture, Uri contact)
         {
         	ContentValues values = new ContentValues();
 			
@@ -80,12 +80,12 @@ public final class PlaceBook
 			if (picture != null) values.put(Places.PICTURE, picture.toString());
 			if (contact != null) values.put(Places.CONTACT, contact.toString());
 
-			resolver.update(Places.PLACES_URI.addId(id), values, null, null);
+			resolver.update(Uri.withAppendedPath(PLACES_URI, String.valueOf(id)), values, null, null);
         }
 
         public static Cursor get(ContentResolver resolver, long id)
         {
-        	return resolver.query(Places.PLACES_URI.addId(id), null, null, null, null);
+        	return resolver.query(Uri.withAppendedPath(PLACES_URI, String.valueOf(id)), null, null, null, null);
         }
         
         public static Cursor query(ContentResolver resolver, long listId)
@@ -125,7 +125,7 @@ public final class PlaceBook
     public static final class Lists
     {        
         public static final String LISTS_PATH = "lists";
-        public static final ContentURI LISTS_URI = CONTENT_URI.addPath(LISTS_PATH);
+        public static final Uri LISTS_URI = Uri.withAppendedPath(CONTENT_URI, LISTS_PATH);
         
         public static final String ID = "_id";
         public static final String NAME = "name";
@@ -138,12 +138,12 @@ public final class PlaceBook
         
       
         
-        public static ContentURI add(ContentResolver resolver, String name)
+        public static Uri add(ContentResolver resolver, String name)
         {
         	return add(resolver, name, 4, false, false);
         }
         
-        public static ContentURI add(ContentResolver resolver, String name, int capacity, boolean isSequence, boolean isSystem)
+        public static Uri add(ContentResolver resolver, String name, int capacity, boolean isSequence, boolean isSystem)
         {
 			ContentValues values = new ContentValues();
 			
@@ -158,13 +158,13 @@ public final class PlaceBook
         
         public static void delete(ContentResolver resolver, long id)
         {
-        	resolver.delete(Lists.LISTS_URI.addId(id), null, null);
+        	resolver.delete(Uri.withAppendedPath(LISTS_URI, String.valueOf(id)), null, null);
         }     
         
         
         public static Cursor get(ContentResolver resolver, long id)
         {
-        	return resolver.query(LISTS_URI.addId(id), null, null, null, null);
+        	return resolver.query(Uri.withAppendedPath(LISTS_URI, String.valueOf(id)), null, null, null, null);
         }
         
         public static long get(ContentResolver resolver, String name)
@@ -198,7 +198,7 @@ public final class PlaceBook
     public static final class Intents
     {        
         public static final String INTENTS_PATH = "intents";
-        public static final ContentURI INTENTS_URI = CONTENT_URI.addPath(INTENTS_PATH);
+        public static final Uri INTENTS_URI = Uri.withAppendedPath(CONTENT_URI, INTENTS_PATH);
         
         
         public static final String ID = "_id";

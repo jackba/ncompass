@@ -16,9 +16,10 @@ import java.util.Map;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.database.Cursor;
 import android.location.Location;
-import android.net.ContentURI;
+import android.net.Uri;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -98,8 +99,8 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     	{
     		location = tracker.getCurrentLocation();
     		ContentResolver resolver = activity.getContentResolver();
-    		ContentURI place = Places.add(resolver, location, listId);
-    		Cursor c = Places.get(resolver, place.getPathLeafId());
+    		Uri place = Places.add(resolver, location, listId);
+    		Cursor c = Places.get(resolver, ContentUris.parseId(place));
     		    		
     		list.loadDataFromCursor(c, list.places);
     	}

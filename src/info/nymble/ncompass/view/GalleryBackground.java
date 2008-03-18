@@ -153,4 +153,12 @@ public class GalleryBackground extends Drawable
 
 		return bitmap;
 	}
+
+
+
+	@Override
+	public void setColorFilter(ColorFilter arg0) 
+	{
+
+	}
 }

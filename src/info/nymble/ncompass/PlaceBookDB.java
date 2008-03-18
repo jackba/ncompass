@@ -4,13 +4,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import android.content.ContentProviderDatabaseHelper;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
-public class PlaceBookDB extends ContentProviderDatabaseHelper
+public class PlaceBookDB extends SQLiteOpenHelper
 {
         static final String FILE_NAME = "placebook.db";
         static final int VERSION = 20;
@@ -160,9 +160,9 @@ public class PlaceBookDB extends ContentProviderDatabaseHelper
             db.execSQL(sql);
             
             
-            printCursor(db.query("SELECT * FROM Places", EMPTY_ARGS), "Places Table");
-            printCursor(db.query("SELECT * FROM Lists", EMPTY_ARGS), "Lists Table");
-            printCursor(db.query("SELECT * FROM PlaceLists", EMPTY_ARGS), "PlaceLists Table");
+            printCursor(db.rawQuery("SELECT * FROM Places", EMPTY_ARGS), "Places Table");
+            printCursor(db.rawQuery("SELECT * FROM Lists", EMPTY_ARGS), "Lists Table");
+            printCursor(db.rawQuery("SELECT * FROM PlaceLists", EMPTY_ARGS), "PlaceLists Table");
         }
 
         
