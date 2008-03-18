@@ -2,47 +2,52 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="info.nymble.ncompass">
 
+	<uses-permission android:name="android.permission.ACCESS_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_GPS" />
+	<uses-permission android:name="android.permission.ACCESS_ASSISTED_GPS" />
+	<uses-permission android:name="android.permission.ACCESS_CELL_ID" />
+
 
     <application android:theme="@style/Theme" >
     	
 
-		<provider class="PlaceBookProvider"
+		<provider android:name="PlaceBookProvider"
 	            android:authorities="info.nymble.ncompass.placebook" />
 
 
     	<activity 
-    		class=".activities.PlaceListActivity" 
+    		android:name=".activities.PlaceListActivity" 
     		android:label="@string/placebook_title"
     		android:icon="@drawable/icon_placebook">
     		
             <intent-filter>
-                <action android:value="android.intent.action.MAIN" />
-                <category android:value="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity 
-        	class=".activities.TargetCompassActivity" 
+        	android:name=".activities.TargetCompassActivity" 
         	android:label="@string/target_compass_title"
         	android:icon="@drawable/icon_compass">
         	
             <intent-filter>
-                <action android:value="android.intent.action.MAIN" />
-                <category android:value="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
 
 
 
-     	<activity class=".activities.DummyActivity"  android:label="Dummy Activity"/>
-     	<activity class=".activities.SignpostActivity"  android:label="Signpost Activity"/>
+     	<activity android:name=".activities.DummyActivity"  android:label="Dummy Activity"/>
+     	<activity android:name=".activities.SignpostActivity"  android:label="Signpost Activity"/>
      	
-		<activity class=".activities.AddListActivity" android:label="@string/new_list_title">
+		<activity android:name=".activities.AddListActivity" android:label="@string/new_list_title">
             <intent-filter>
-                <action android:value="android.intent.action.ADD" />
-                <category android:value="android.intent.category.DEFAULT" />
-                <type android:value="vnd.android.cursor.dir/vnd.info.nymble.location" />
+                <action android:name="android.intent.action.ADD" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.dir/vnd.info.nymble.location" />
             </intent-filter>
         </activity>
     </application>

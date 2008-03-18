@@ -9,29 +9,30 @@ import java.util.HashMap;
 
 import android.content.ContentProvider;
 import android.content.ContentResolver;
-import android.content.ContentURIParser;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.ContentURI;
+import android.net.Uri;
 import android.util.Log;
 
 
 
 public class PlaceBookProvider  extends ContentProvider
 {
-    public static final ContentURI CONTENT_URI = PlaceBook.CONTENT_URI;
+    public static final Uri CONTENT_URI = PlaceBook.CONTENT_URI;
 
     private HashMap<Integer, Handler> handlers = new HashMap<Integer, Handler>();
-    private ContentURIParser parser = null;   
+    private UriMatcher parser = null;   
     private SQLiteDatabase conn = null;
     
     private ContentResolver resolver;
     
     public PlaceBookProvider()
     {
-        parser = new ContentURIParser(ContentURIParser.NO_MATCH);
+        parser = new UriMatcher(UriMatcher.NO_MATCH);
         parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH, 0);
         parser.addURI(CONTENT_URI.getAuthority(), Places.PLACES_PATH + "/#", 1);
         parser.addURI(CONTENT_URI.getAuthority(), Lists.LISTS_PATH, 2);
@@ -51,7 +52,7 @@ public class PlaceBookProvider  extends ContentProvider
     
     
     @Override
-    public String getType(ContentURI uri)
+    public String getType(Uri uri)
     {
         switch (parser.match(uri))
         {
@@ -78,7 +79,7 @@ public class PlaceBookProvider  extends ContentProvider
     {
         Context c = getContext();
         
-        Log.i("Context Info", "" + c.getDataDir());
+//        Log.i("Context Info", "" + c.getDataDir());
         Log.i("Context Info", "" + c.getPackageName());
         Log.i("Context Info", "" + c.getPackagePath());
 
@@ -89,27 +90,27 @@ public class PlaceBookProvider  extends ContentProvider
     
     
     @Override
-    public int delete(ContentURI uri, String selection, String[] selectionArgs)
+    public int delete(Uri uri, String selection, String[] selectionArgs)
     {
-    	return getHandler(uri).delete(uri.getPathLeafId());
+    	return getHandler(uri).delete(ContentUris.parseId(uri));
     }
 
     @Override
-    public ContentURI insert(ContentURI uri, ContentValues values)
+    public Uri insert(Uri uri, ContentValues values)
     {
     	return getHandler(uri).insert(values);
     }
     
     @Override
-    public int update(ContentURI uri, ContentValues values, String selection, String[] selectionArgs)
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs)
     {
-        return getHandler(uri).update(uri.getPathLeafId(), values);
+        return getHandler(uri).update(ContentUris.parseId(uri), values);
     }
 
     @Override
-    public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
     {
-        return getHandler(uri).query(uri, projection, selection, selectionArgs, groupBy, having, sortOrder);
+        return getHandler(uri).query(uri, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
 
@@ -121,7 +122,7 @@ public class PlaceBookProvider  extends ContentProvider
     
     
 
-    private Handler getHandler(ContentURI uri)
+    private Handler getHandler(Uri uri)
     {
     	Handler h = handlers.get(parser.match(uri));
     	
@@ -144,8 +145,8 @@ public class PlaceBookProvider  extends ContentProvider
     {
     	UnsupportedOperationException e = new UnsupportedOperationException();
     	
-    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder){ throw e; }
-    	public ContentURI insert(ContentValues values){ throw e; }
+    	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder){ throw e; }
+    	public Uri insert(ContentValues values){ throw e; }
     	public int delete(long id){ throw e; }
     	public int update(long id, ContentValues values){ throw e; }
     }
@@ -153,14 +154,14 @@ public class PlaceBookProvider  extends ContentProvider
     
     class PlacesHandler extends Handler
     {
-    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     	{ 
     		return conn.query(PlaceBookDB.SQL_PLACES_TABLE, projection, selection, selectionArgs, groupBy, having, sortOrder);
     	}
     	
-		public ContentURI insert(ContentValues values) 
+		public Uri insert(ContentValues values) 
 		{
-			return Places.PLACES_URI.addId(insertOrUpdateLocation(values));
+			return Uri.withAppendedPath(Places.PLACES_URI, String.valueOf(insertOrUpdateLocation(values)));
 		}
 
 	    
@@ -176,7 +177,7 @@ public class PlaceBookProvider  extends ContentProvider
 	        long listId = values.getAsLong(Places.LIST);
 	        long placeList = getPlaceListEntry(listId, placeId, values.getAsString(Places.INFO));
 
-	        resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
+	        resolver.notifyChange(Uri.withAppendedPath(Lists.LISTS_URI, String.valueOf(listId)), null);
 	        return placeList;
 	    }
 	    
@@ -184,7 +185,7 @@ public class PlaceBookProvider  extends ContentProvider
 	    private long getPlace(double lat, double lon, double alt)
 	    {
 	        String[] args = new String[]{String.valueOf(lat), String.valueOf(lon), String.valueOf(alt)};
-	        Cursor c = conn.query(PlaceBookDB.SQL_PLACES_SELECT_PLACE, args);
+	        Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_SELECT_PLACE, args);
 	        
 	        if (c.first())
 	        {
@@ -207,7 +208,7 @@ public class PlaceBookProvider  extends ContentProvider
 	    private long getPlaceListEntry(long listId, long placeId, String info)
 	    {
 	    	String[] args = new String[]{String.valueOf(listId), String.valueOf(placeId)};
-	        Cursor c = conn.query(PlaceBookDB.SQL_PLACES_SELECT_ENTRY, args);
+	        Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_SELECT_ENTRY, args);
 	        ContentValues values = new ContentValues();
 	        long entryId = -1;
 	        
@@ -234,7 +235,7 @@ public class PlaceBookProvider  extends ContentProvider
 	    private void compactPlaceLists(long listId)
 	    {
 	    	String[] args = new String[]{String.valueOf(listId)};
-	    	Cursor c = conn.query(PlaceBookDB.SQL_PLACES_COMPACT, args);
+	    	Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_COMPACT, args);
 
 	    	if (c.first())
 	    	{
@@ -256,27 +257,27 @@ public class PlaceBookProvider  extends ContentProvider
 			if (affected > 0)
 			{
 				conn.execSQL(PlaceBookDB.SQL_PLACES_CLEANUP);
-				resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
+				resolver.notifyChange(Uri.withAppendedPath(Lists.LISTS_URI, String.valueOf(listId)), null);
 			}
 			
 			return affected;
 		}
 
-		public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+		public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     	{ 
-			return conn.query(PlaceBookDB.SQL_PLACES_TABLE, projection, "_id=" + uri.getPathLeafId(), null, null, null, null);
+			return conn.query(PlaceBookDB.SQL_PLACES_TABLE, projection, "_id=" + ContentUris.parseId(uri), null, null, null, null);
 		}
 
 		public int update(long id, ContentValues values) 
 		{
-			Cursor c = query(Places.PLACES_URI.addId(id), new String[]{"place"}, null, null, null, null, null);
+			Cursor c = query(Uri.withAppendedPath(Places.PLACES_URI, String.valueOf(id)), new String[]{"place"}, null, null, null, null, null);
 			long listId = findList(id);
 			int affected = 0;
 			
 			if (c.first())
 			{
 				affected = conn.update("Places", values, "_id=" + c.getLong(0), null);
-				resolver.notifyChange(Lists.LISTS_URI.addId(listId), null);
+				resolver.notifyChange(Uri.withAppendedPath(Lists.LISTS_URI, String.valueOf(listId)), null);
 			}
 			
 			return affected;
@@ -284,7 +285,7 @@ public class PlaceBookProvider  extends ContentProvider
 		
 		private long findList(long placeId)
 		{
-			Cursor c = conn.query(PlaceBookDB.SQL_PLACES_LIST, new String[]{String.valueOf(placeId)});
+			Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_LIST, new String[]{String.valueOf(placeId)});
 			
 			if (c.first())
 			{
@@ -298,14 +299,14 @@ public class PlaceBookProvider  extends ContentProvider
     
     class ListsHandler extends Handler
     {
-    	public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+    	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     	{ 
     		return conn.query(PlaceBookDB.SQL_LISTS_TABLE, projection, selection, selectionArgs, groupBy, having, sortOrder);
     	}
     	
-		public ContentURI insert(ContentValues values) 
+		public Uri insert(ContentValues values) 
 		{
-			ContentURI uri = Lists.LISTS_URI.addId(conn.insert("Lists", "_empty", values));;
+			Uri uri = Uri.withAppendedPath(Lists.LISTS_URI, String.valueOf(conn.insert("Lists", "_empty", values)));
 			
 			resolver.notifyChange(Lists.LISTS_URI, null);
 			return uri;
@@ -323,9 +324,9 @@ public class PlaceBookProvider  extends ContentProvider
 			return affected;
 		}
 
-		public Cursor query(ContentURI uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
+		public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder)
     	{ 
-			return conn.query(PlaceBookDB.SQL_LISTS_TABLE, projection, "_id=" + uri.getPathLeafId(), null, null, null, null);
+			return conn.query(PlaceBookDB.SQL_LISTS_TABLE, projection, "_id=" + ContentUris.parseId(uri), null, null, null, null);
 		}
     }
 }

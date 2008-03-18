@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.view.SurfaceView;
 import android.view.View;
 
 import java.nio.ByteBuffer;
@@ -65,7 +66,7 @@ public class SignpostActivity extends Activity {
     }
 }
 
-class GLView extends View
+class GLView extends SurfaceView
 {
 	Sign sign = new Sign(120000, 40000, 10000);
 	
@@ -124,6 +125,8 @@ class GLView extends View
          * This is simply done by casting the GL context to either
          * GL10 or GL11.
          */
+    		
+    	canvas.drawColor(0x66FFFFFF);
         GL10 gl = (GL10)(mGLContext.getGL());
         
         /*
@@ -132,7 +135,7 @@ class GLView extends View
          * waitNative() to accomplish this. Once this is done, no native
          * calls should be issued.
          */
-        mGLContext.waitNative(canvas, this);
+        mGLContext.waitNative(); //canvas, this);
         
             int w = getWidth();
             int h = getHeight();

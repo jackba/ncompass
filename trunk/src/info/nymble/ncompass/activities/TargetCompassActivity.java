@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class TargetCompassActivity extends Activity
@@ -25,9 +24,11 @@ public class TargetCompassActivity extends Activity
 	LocationTracker tracker;
 	TargetCompass compass;
 	TextView title;
-	TextView distance;
-	ImageView image;
 	
+	TextView distance;
+	TextView speed;
+	TextView eta;
+
 
 	
 	
@@ -41,9 +42,11 @@ public class TargetCompassActivity extends Activity
         tracker = new LocationTracker(this);   
         compass = (TargetCompass) findViewById(R.id.compass);  
         title = (TextView) findViewById(R.id.place_title);
+        
         distance = (TextView) findViewById(R.id.place_distance);
-        image = (ImageView) findViewById(R.id.place_image);
-        image.setImageResource(Images.getNext());
+        speed = (TextView) findViewById(R.id.place_speed);
+        eta = (TextView) findViewById(R.id.place_eta);
+        
         
         setTarget(getIntent());
 
@@ -77,7 +80,6 @@ public class TargetCompassActivity extends Activity
             public void run()
             {
                 setTarget(tracker.getCurrentLocation());
-		        image.setImageResource(Images.getNext());
             }
         }
         );
@@ -98,11 +100,14 @@ public class TargetCompassActivity extends Activity
 		if (l != null && t != null)
 		{
 			final float d = l.distanceTo(t);
-
+			final float s = l.getSpeed();
+			
 			handler.post(new Runnable(){
 				public void run()
 				{
 					distance.setText(Format.formatDistance(d));
+					speed.setText(Format.formatSpeed(s));
+					eta.setText("eta " + Format.roundNumber(d/s) + "sec");
 				}
 			});
 		}

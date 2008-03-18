@@ -6,22 +6,23 @@
 	android:layout_width="fill_parent" 
     android:layout_height="fill_parent">
 	
-	<ListView id="@+id/list_contents"
+	<ListView android:id="@+id/list_contents"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
-  	<TextView id="@+id/list_loading"
+  	<TextView android:id="@+id/list_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="loading list contents..."
         android:visibility="gone" />
-  	<TextView id="@+id/list_empty"
+  	<TextView android:id="@+id/list_empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="no places in list"
         android:visibility="gone" />
 	    
 	    
-	<Gallery xmlns:android="http://schemas.android.com/apk/res/android" id="@+id/list_gallery"
+	<Gallery xmlns:android="http://schemas.android.com/apk/res/android" 
+		android:id="@+id/list_gallery"
 		android:layout_width="fill_parent"	
 		android:layout_height="60dip"
 		android:layout_alignParentBottom="true"

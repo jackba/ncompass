@@ -21,11 +21,11 @@
 	    	 
 	    <TableRow>
 	        <TextView
-	        	id="@+id/place_date"
+	        	android:id="@+id/place_date"
 	            android:text="@string/date"
 	            android:padding="3dip" />
 	        <TextView
-	        	id="@+id/place_distance"
+	        	android:id="@+id/place_distance"
 	            android:text="@string/distance"
 	            android:textAlign="end"
 	            android:padding="3dip" />
@@ -39,11 +39,11 @@
 	    
 	    <TableRow 
 	    	android:paddingBottom="2dip" 
-	    	id="@+id/place_row_2" >
+	    	android:id="@+id/place_row_2" >
 	        
 	        
 	        <TextView
-	        	id="@+id/place_title"
+	        	android:id="@+id/place_title"
 	            android:text="@string/title"
 	            android:padding="3dip"
 	            android:textAlign="center" />
