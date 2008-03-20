@@ -107,7 +107,7 @@ public class TargetCompassActivity extends Activity
 				{
 					distance.setText(Format.formatDistance(d));
 					speed.setText(Format.formatSpeed(s));
-					eta.setText("eta " + Format.roundNumber(d/s) + "sec");
+					eta.setText("eta " + Format.formatTime((int)(d/s)));
 				}
 			});
 		}

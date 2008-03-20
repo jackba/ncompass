@@ -83,12 +83,10 @@ public class Format
         return longDateFormat.format(date);
     }
     
-//    public static void main(String[] a) throws ParseException
+//    public static void main(String[] a) throws Exception
 //    {
-//        String text = "2007-01-15 23:11:11";
-//        Date date = timestampDateFormat.parse(text);
-//        
-//        text = formatDate(date);
+//    	double ms = 30;
+//        String text = formatDate(date);
 //        System.out.println(text);
 //    }
     
@@ -100,10 +98,10 @@ public class Format
 
         double inches = (m*metersPerSecond + b);
         int chunk = chunkSizes.length - 1;
-        double value = (inches/chunkSizes[chunk])/3600;
+        double value = (inches/chunkSizes[chunk])*3600;
         
         roundNumber(value, buffer);
-        buffer.append(chunkLabels[chunk] + "/hr");
+        buffer.append("mph");
         return buffer.toString();
     }
     
@@ -132,6 +130,28 @@ public class Format
             }
         }
         return 0;
+    }
+    
+    
+    
+    public static String formatTime(int seconds)
+    {
+    	if (seconds < 60)
+    	{
+    		return (seconds) + "s";
+    	}
+    	else if (seconds < 3600)
+    	{
+    		return (seconds/60) + "m";
+    	}
+    	else if (seconds > 86400)
+    	{
+    		return "forever";
+    	}
+    	else
+    	{
+    		return (seconds/3600) + "h";
+    	}
     }
     
     
