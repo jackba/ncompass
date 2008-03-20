@@ -47,36 +47,50 @@
 		    android:id="@+id/compass" />
 	</RelativeLayout>
 	
-	<LinearLayout
+	<RelativeLayout
 		android:layout_width="fill_parent" 
 	    android:layout_height="wrap_content"
-		android:gravity="bottom"
-	    android:orientation="horizontal">
+		android:gravity="bottom">
 	    
 	    <TextView
-			android:layout_width="70dip"	
+			android:id="@+id/place_speed"
+			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
 			android:text="mph"
 			android:textAlign="start"
-			android:id="@+id/place_speed"
+
+			android:textColor="#f99f00"			
+			android:typeface="monospace"
+			android:textStyle="bold"
+			android:textSize="12sp"
 		/>
 		<TextView
-			android:layout_width="70dip"	
+			android:id="@+id/place_distance"
+			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
 			android:text="Hello Compass"
 			android:textAlign="center"
-			android:id="@+id/place_distance"
-			android:textColor="#f99f00"
+
+
+			android:layout_weight="1"
+			android:textColor="#f99f00"			
+			android:typeface="monospace"
+			android:textStyle="bold"
+			android:textSize="16sp"
 		/>
 		<TextView
-			android:layout_width="70dip"	
+			android:id="@+id/place_eta"
+			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
 			android:text="ETA min"
 			android:textAlign="end"
-			android:id="@+id/place_eta"
-			android:textColor="#f99f00"
+
+			android:textColor="#f99f00"			
+			android:typeface="monospace"
+			android:textStyle="bold"
+			android:textSize="12sp"
 		/>
-	</LinearLayout>
+	</RelativeLayout>
 </LinearLayout>
 
 
