@@ -6,7 +6,6 @@ import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.GalleryBackground;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;

@@ -1,10 +1,14 @@
 package info.nymble.ncompass;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
+import android.util.Log;
 
 
 /**
@@ -24,7 +28,17 @@ public final class PlaceBook
     
     
     
-    
+    public static class Place
+    {
+    	long id;
+    	long created;
+    	long updated;
+    	Location location;
+    	String title;
+    	String info;
+    	Uri picture;
+    	Uri contact;
+    }
     
     public static final class Places
     {   
@@ -94,7 +108,78 @@ public final class PlaceBook
         	
         	return resolver.query(Places.PLACES_URI, null, list, null, DEFAULT_ORDER);        	
         }
+        
+        
+        
+        
+        public static Place getPlace(ContentResolver resolver, long id)
+        {
+        	Cursor c = resolver.query(Uri.withAppendedPath(PLACES_URI, String.valueOf(id)), null, null, null, null);
+        	List<Place> l = loadPlacesFromCursor(c);
+        	
+        	if (l.size()  > 0) return l.get(0);
+        	return null;
+        }
+        
+        public static List<Place> getPlaces(ContentResolver resolver, long listId)
+        {
+        	String list = LIST + "=" + listId;
+        	Cursor c = resolver.query(Places.PLACES_URI, null, list, null, DEFAULT_ORDER);
+        	List<Place> l = loadPlacesFromCursor(c);
+
+        	return l;
+        }
+        
+        
+        
+        
+        private static List<Place> loadPlacesFromCursor(Cursor c)
+        {
+        	ArrayList<Place> list = new ArrayList<Place>();
+        	int title = c.getColumnIndex( Places.TITLE );
+        	int lat = c.getColumnIndex( Places.LAT );
+        	int lon = c.getColumnIndex( Places.LON );
+        	int alt = c.getColumnIndex( Places.ALT );
+        	int idColumn = c.getColumnIndex( Places.ID );
+        	int created = c.getColumnIndex( Places.CREATED );
+        	int updated = c.getColumnIndex( Places.UPDATED );
+        	int picture = c.getColumnIndex( Places.PICTURE );
+        	int contact = c.getColumnIndex( Places.CONTACT );
+        	
+        	while (c.next())
+        	{
+        		Place p = new Place();
+        		Location l = new Location();
+        		
+        		l.setAltitude(Double.parseDouble( c.getString(alt) ));
+        		l.setLatitude(Double.parseDouble( c.getString(lat) ));
+        		l.setLongitude(Double.parseDouble( c.getString(lon) ));
+        		p.location = l;
+        		p.id = Long.parseLong( c.getString(idColumn) );
+        		p.title = c.getString(title);
+        		p.info = c.getString(title);
+        		p.created = Long.parseLong( c.getString(created) );
+        		p.updated = Long.parseLong( c.getString(updated) );
+        		p.picture = Uri.parse( c.getString(picture) );
+        		p.contact = Uri.parse( c.getString(contact) );
+        		
+        		list.add(p);
+        		Log.w(null, "found target " + l.toString() + " entitled " + c.getString(title));
+        	}
+        	
+        	return list;
+        }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     /**

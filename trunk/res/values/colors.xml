@@ -17,4 +17,11 @@
 
 <resources>
 	<drawable name="solid_black">#ff000000</drawable>
+	
+	
+	<drawable name="orange">#fff99f00</drawable>
+	<drawable name="blue">#ff066bc9</drawable>
+	<drawable name="lime">#ffcff377</drawable>
+	<drawable name="green">#ff3e8740</drawable>
+	<drawable name="pearl">#ffecece1</drawable>
 </resources>

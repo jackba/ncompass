@@ -41,8 +41,8 @@
 
 
      	<activity android:name=".activities.DummyActivity"  android:label="Dummy Activity"/>
-     	<activity android:name=".activities.SignpostActivity"  android:label="Signpost Activity"/>
-     	
+		<activity android:name=".activities.InputFieldActivity"  android:label="Enter Option"/>
+
 		<activity android:name=".activities.AddListActivity" android:label="@string/new_list_title">
             <intent-filter>
                 <action android:name="android.intent.action.ADD" />

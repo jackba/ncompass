@@ -60,6 +60,7 @@ public class LocationTracker
         {
             locationProvider = list.get(i);
         }
+        Log.i(null, "Location providers count=" + list.size());
 
         Stopwatch.stop("find provider");
     }
@@ -85,7 +86,7 @@ public class LocationTracker
     public void start()
     {
     	started = true;
-    	if (!listening && listeners.size() > 0)
+    	if (!listening && listeners.size() > 0 && locationProvider != null)
     	{
     		Log.i(null, "Registering Location Tracking");
     		context.registerReceiver(intentReceiver, filter);
@@ -99,9 +100,17 @@ public class LocationTracker
     	started = false;
     	if (listening)
     	{
-    		Log.i(null, "Unregistering Location Tracking");
-    		locationManager.removeUpdates(intent);
-    		context.unregisterReceiver(intentReceiver);
+    		try
+    		{    			
+    			Log.i(null, "Unregistering Location Tracking");
+    			listening = false;
+    			context.unregisterReceiver(intentReceiver);
+    			locationManager.removeUpdates(intent);
+    		}
+    		catch (Exception e)
+    		{
+    			Log.w("LocationTracker", "Cleanup failure while unregistering m=" + e.getMessage());
+    		}
     	}
     }
     

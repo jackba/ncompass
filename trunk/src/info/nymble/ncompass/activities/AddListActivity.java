@@ -28,9 +28,6 @@ public class AddListActivity extends Activity
 	            }
 	        }
         );
-
-        
-        
     }
     
     
