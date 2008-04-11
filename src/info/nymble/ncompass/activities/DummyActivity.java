@@ -10,14 +10,18 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
 import android.graphics.Camera;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
@@ -44,13 +48,95 @@ protected void onCreate(Bundle icicle) {
 //    testList(this);
 
     
+//    i1 = new ImageView(this);
+//    i1.setImageResource(R.drawable.gallery_photo_1);
+//    
+//    i2 = new ImageView(this);
+//    i2.setImageResource(R.drawable.gallery_photo_2);
+//    
+//    this.setContentView(i1);
+//    
+//    
+    
+    
+    
+    Rect r = new Rect(0,0,250,250);
+    BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
+    BitmapDrawable nwse_p  = buildScaledDrawable(nwse, r);
+    nwse.setBounds(r);
+    
+    
+    Bitmap b = Bitmap.createBitmap(r.right, r.bottom, true);
+    Canvas c = new Canvas(b);
+    
+    Bitmap b1 = Bitmap.createBitmap(r.right, r.bottom, true);
+    Canvas c1 = new Canvas(b1);
+    
+    
+    long time = System.currentTimeMillis();
+    
+    time = System.currentTimeMillis();
+    for (int i = 0; i < 360; i++) {
+    	c.rotate(1);
+    	nwse.draw(c);
+    }
+    time = logTime(time, "regular");
+    
+    for (int i = 0; i < 360; i++) {
+    	c1.rotate(1);
+    	nwse_p.draw(c1);
+    }
+    time = logTime(time, "regular");
+    
+    
+    
+    
+
     i1 = new ImageView(this);
-    i1.setImageResource(R.drawable.gallery_photo_1);
-    
-    i2 = new ImageView(this);
-    i2.setImageResource(R.drawable.gallery_photo_2);
-    
+    i1.setImageBitmap(b);
     this.setContentView(i1);
+    
+    
+    
+    
+    
+    
+    
+    
+//    try {
+//    	MediaPlayer mp = MediaPlayer.create(this, R.raw.target_ahead);
+////		mp.prepare();
+//		mp.start();
+//	} catch (Exception e) {
+//		Log.e(null, "bit of a problem " + e.getMessage(), e);
+//	}
+}
+
+
+private BitmapDrawable buildScaledDrawable(BitmapDrawable original, Rect bounds)
+{
+	Bitmap b = Bitmap.createBitmap(bounds.width(), bounds.height(), true);
+	Canvas c = new Canvas(b);
+	
+	original.setBounds(0, 0, bounds.width(), bounds.height());
+	original.draw(c);
+	BitmapDrawable scaled = new BitmapDrawable(b);
+	scaled.setBounds(bounds);
+	
+	return scaled;
+}
+
+
+
+
+
+private long logTime(long startTime, String m)
+{
+	long endTime = System.currentTimeMillis();
+	
+	Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
+	
+	return endTime;
 }
 
 

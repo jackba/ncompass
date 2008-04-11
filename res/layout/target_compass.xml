@@ -8,12 +8,14 @@
     android:orientation="vertical">
 	
 	<TextView
+		android:id="@+id/place_title"
 		android:layout_width="fill_parent"	
 		android:layout_height="wrap_content"
 		android:textAlign="center"
+				
+		android:textColor="#f99f00"			
+		android:textStyle="bold"
 		android:textSize="18sp"
-		android:text="Title"
-		android:id="@+id/place_title"
 	/>	
 	
 	
@@ -42,7 +44,7 @@
 
 		<info.nymble.ncompass.view.TargetCompass
 		    android:layout_width="fill_parent"
-		    android:layout_height="180dip"
+		    android:layout_height="220dip"
 		    android:layout_centerInParent="true"
 		    android:id="@+id/compass" />
 	</RelativeLayout>
@@ -56,7 +58,6 @@
 			android:id="@+id/place_speed"
 			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
-			android:text="mph"
 			android:textAlign="start"
 
 			android:textColor="#f99f00"			
@@ -68,7 +69,6 @@
 			android:id="@+id/place_distance"
 			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
-			android:text="Hello Compass"
 			android:textAlign="center"
 
 
@@ -82,7 +82,6 @@
 			android:id="@+id/place_eta"
 			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
-			android:text="ETA min"
 			android:textAlign="end"
 
 			android:textColor="#f99f00"			

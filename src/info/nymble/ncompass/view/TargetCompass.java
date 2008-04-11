@@ -6,11 +6,12 @@ import info.nymble.ncompass.R;
 import java.util.Map;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -30,11 +31,22 @@ import android.view.View;
  * 
  */
 public class TargetCompass extends View {
-	private final BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
-	private final BitmapDrawable needle = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_needle);
-	private final String no_bearing_message = "Current Bearing Unknown";
-	private final String no_target_message = "No Target Set";
-	private final Paint error_message_paint = buildErrorPaint();
+	private Drawable nwse_raw = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
+	private Drawable needle_raw = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_needle);
+
+	private int color = 0xFFFFFFFF;
+	private Drawable nwse = null;
+	private Drawable needle = null;
+
+	
+	//	private Drawable arrow;
+
+
+	
+	
+//	private final String no_bearing_message = "Current Bearing Unknown";
+//	private final String no_target_message = "No Target Set";
+//	private final Paint error_message_paint = buildErrorPaint();
 	
 	// variables for containing and rotating the compass images
 	private Rect bounds = new Rect(); 	// the square bounding rectangle into which we draw the compass
@@ -96,6 +108,16 @@ public class TargetCompass extends View {
 		target = t;
 		updateView();
 	}
+	
+	
+	
+	public void setColor(int color)
+	{
+		this.color = color;
+		nwse = null;
+	}
+	
+	
 
 	/**
 	 * @see setTarget(Location t)
@@ -178,31 +200,61 @@ public class TargetCompass extends View {
 	 */
 	protected void onDraw(Canvas canvas) {
 		this.onDrawBackground(canvas);
+		if (nwse == null) initialize();
+		
+		
+		
+		long time = System.currentTimeMillis();
+		
 		if (nwse_display.isVisible()) 
 		{
+			canvas.save(Canvas.HAS_ALPHA_LAYER_SAVE_FLAG);
 			canvas.save();
 			canvas.rotate(nwse_display.getBearing(), cx, cy);
-			nwse.draw(canvas);
 			
+			
+			nwse.draw(canvas);
+			time = logTime(time, "nwse");
+//			canvas.drawText("N", (bounds.left + bounds.right)/2 - 5, bounds.top + 10,error_message_paint);
 
 			if (needle_display.isVisible()) 
 			{
 				canvas.rotate(needle_display.getBearing(), cx, cy);
 				needle.draw(canvas);
+				time = logTime(time, "needle");
+
+//				new Arrow().draw(canvas);
+//				canvas.drawText("T", (bounds.left + bounds.right)/2 - 5, bounds.top + 20,error_message_paint);
 				canvas.restore();
 			} else 
 			{
 				canvas.restore();
-				canvas.drawText(no_target_message, cx, cy, error_message_paint);
+//				canvas.drawText(no_target_message, cx, cy, error_message_paint);
 			}
+			
+			
+//			cover.draw(canvas);
+//			time = logTime(time, "cover");
 		} 
 		else 
 		{
-			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
+//			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
 		}
+		
 		if (!nwse_display.isStable() | !needle_display.isStable()) postInvalidate();
 	}
 
+	
+	private long logTime(long startTime, String m)
+	{
+		long endTime = System.currentTimeMillis();
+		
+		Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
+		
+		return endTime;
+	}
+	
+	
 	
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -244,7 +296,10 @@ public class TargetCompass extends View {
 			needle_display.clearBearing();
 		}
 
-		if (!nwse_display.isStable() | !needle_display.isStable()) postInvalidate();
+		if (!nwse_display.isStable() | !needle_display.isStable())
+		{
+			postInvalidate();
+		}
 	}
 	
 	/**
@@ -253,17 +308,25 @@ public class TargetCompass extends View {
 	 * 
 	 * @return the constructed paint object
 	 */
-	private Paint buildErrorPaint() {
-		Paint p = new Paint();
-		p.setARGB(255, 255, 0, 0);
-		p.setTextAlign(Paint.Align.CENTER);
-		p.setTextSize(14);
-		p.setTypeface(Typeface.create("Georgia", Typeface.BOLD));
-		p.setAntiAlias(true);
+//	private Paint buildErrorPaint() {
+//		Paint p = new Paint();
+//		p.setARGB(0xFF, 0xF9, 0x9F, 00);
+//		p.setTextAlign(Paint.Align.CENTER);
+//		p.setTextSize(14);
+//		p.setTypeface(Typeface.create("Georgia", Typeface.BOLD));
+//		p.setAntiAlias(true);
+//
+//		return p;
+//	}
 
-		return p;
+	
+	private void initialize()
+	{
+		if (nwse == null) nwse = buildScaledNWSE(nwse_raw, bounds, color);
+		if (needle == null) needle = buildScaledDrawable(needle_raw, bounds);
 	}
-
+	
+	
 	/**
 	 * Makes sure that the drawing parameters for the class are correctly set to
 	 * the current screen dimensions. The height and width of the screen are
@@ -277,11 +340,49 @@ public class TargetCompass extends View {
 		cx = w / 2 + getPaddingLeft();
 		cy = h / 2 + getPaddingTop();
 		setSquareBounds(h, w, (int)cx, (int)cy, bounds);
-
-		nwse.setBounds(bounds);
-		needle.setBounds(bounds);
 	}
 
+	
+	private Drawable buildScaledDrawable(Drawable original, Rect bounds)
+	{
+		Bitmap b = Bitmap.createBitmap(bounds.width(), bounds.height(), true);
+		Canvas c = new Canvas(b);
+
+		original.setBounds(0, 0, bounds.width(), bounds.height());
+		original.draw(c);
+		BitmapDrawable scaled = new BitmapDrawable(b);
+		scaled.setBounds(bounds);
+		
+		return scaled;
+	}
+
+	private Drawable buildScaledNWSE(Drawable original, Rect bounds, int color)
+	{
+		Bitmap b = Bitmap.createBitmap(bounds.width(), bounds.height(), true);
+		Canvas c = new Canvas(b);
+		Paint p = new Paint();
+		float cx = bounds.width()*.5F;
+		float r = bounds.width()*0.43F; // accomadates the padding in the image
+		
+		Log.w(null, "centering the circle cx=" + cx + " cy=" + cx + " r=" + r );
+
+		p.setColor(color);
+		p.setAntiAlias(true);
+		c.drawCircle(cx, cx, r, p);
+		
+		original.setBounds(0, 0, bounds.width(), bounds.height());
+		original.draw(c);
+		BitmapDrawable scaled = new BitmapDrawable(b);
+		scaled.setBounds(bounds);
+		
+		return scaled;
+	}
+	
+	
+	
+	
+	
+	
 	/**
 	 * calculates the largest square that is smaller than h X w
 	 * 
@@ -386,6 +487,10 @@ public class TargetCompass extends View {
 			return bearing_current;
 		}
 
+		public boolean blur()
+		{
+			return speed > 1;
+		}
 
 		
 		
@@ -433,6 +538,61 @@ public class TargetCompass extends View {
 			return Math.abs(i1 - i2) > degree_error_tolerance;
 		}
 	}
+	
+	
+	
+//	private class Arrow extends Drawable
+//	{
+//		Paint p = new Paint();
+//
+//		
+//		public Arrow()
+//		{			
+//			p.setARGB(0xFF, 0xFF, 0x32, 0x32);
+//			p.setAntiAlias(true);
+//			int cx = (bounds.right - bounds.left)/2;
+//		}
+//		
+//		@Override
+//		public void draw(Canvas c) {
+//			// TODO Auto-generated method stub
+//			
+////			Path path = new Path();
+////			Paint paint = error_message_paint;
+////			
+////			
+////			Rect r = bounds;
+////			int x = (bounds.right - bounds.left)/3;
+////			
+////			//f99f00
+////			path.moveTo(r.left + x, r.top + 2*x);
+////			path.lineTo(r.left + (int)(1.5*x), r.top);
+////			path.lineTo(r.left + 2*x, r.top + 2*x);
+////			path.lineTo(r.left + x, r.top + 2*x);
+////			
+////			c.drawPath(path, paint);
+//			c.drawCircle(cx, bounds.top + 15, 5.0F, p);
+//		}
+//
+//		@Override
+//		public int getOpacity() {
+//			// TODO Auto-generated method stub
+//			return 0;
+//		}
+//
+//		@Override
+//		public void setAlpha(int alpha) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//
+//		@Override
+//		public void setColorFilter(ColorFilter cf) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//		
+//	}
 }
 
 
