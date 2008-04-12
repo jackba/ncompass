@@ -54,41 +54,83 @@
 	    android:layout_height="wrap_content"
 		android:gravity="bottom">
 	    
-	    <TextView
-			android:id="@+id/place_speed"
-			android:layout_width="fill_parent"	
-			android:layout_height="wrap_content"
-			android:textAlign="start"
 
-			android:textColor="#f99f00"			
-			android:typeface="monospace"
-			android:textStyle="bold"
-			android:textSize="12sp"
-		/>
+		<LinearLayout
+			android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical">
+			
+			<TextView
+				android:id="@+id/place_target"
+				android:layout_width="fill_parent"	
+				android:layout_height="wrap_content"
+				android:textAlign="start"
+	
+				android:textColor="#f99f00"			
+				android:typeface="monospace"
+				android:textStyle="bold"
+				android:textSize="12sp"
+			/>
+			
+			<TextView
+				android:id="@+id/place_bearing"
+				android:layout_width="fill_parent"	
+				android:layout_height="wrap_content"
+				android:textAlign="start"
+	
+				android:textColor="#f99f00"			
+				android:typeface="monospace"
+				android:textStyle="bold"
+				android:textSize="12sp"
+			/>
+		</LinearLayout>
+		
+		
+					
 		<TextView
 			android:id="@+id/place_distance"
 			android:layout_width="fill_parent"	
 			android:layout_height="wrap_content"
 			android:textAlign="center"
-
-
 			android:layout_weight="1"
-			android:textColor="#f99f00"			
-			android:typeface="monospace"
-			android:textStyle="bold"
-			android:textSize="16sp"
-		/>
-		<TextView
-			android:id="@+id/place_eta"
-			android:layout_width="fill_parent"	
-			android:layout_height="wrap_content"
-			android:textAlign="end"
 
 			android:textColor="#f99f00"			
 			android:typeface="monospace"
 			android:textStyle="bold"
-			android:textSize="12sp"
+			android:textSize="20sp"
 		/>
+		
+		
+		<LinearLayout
+			android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical">
+
+			<TextView
+				android:id="@+id/place_speed"
+				android:layout_width="fill_parent"	
+				android:layout_height="wrap_content"
+				android:textAlign="end"
+			
+				android:textColor="#f99f00"			
+				android:typeface="monospace"
+				android:textStyle="bold"
+				android:textSize="12sp"
+			/>	
+			
+			
+			<TextView
+				android:id="@+id/place_eta"
+				android:layout_width="fill_parent"	
+				android:layout_height="wrap_content"
+				android:textAlign="end"
+			
+				android:textColor="#f99f00"			
+				android:typeface="monospace"
+				android:textStyle="bold"
+				android:textSize="12sp"
+			/>
+		</LinearLayout>
 	</RelativeLayout>
 </LinearLayout>
 

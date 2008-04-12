@@ -66,7 +66,7 @@ public class LocationTracker
     }
     
 
-    public Location getCurrentLocation()
+    public synchronized Location getCurrentLocation()
     {
         if (isLocationOutdated() && locationProvider != null)
         {
@@ -83,7 +83,7 @@ public class LocationTracker
 
     
     
-    public void start()
+    public synchronized void start()
     {
     	started = true;
     	if (!listening && listeners.size() > 0 && locationProvider != null)
@@ -95,17 +95,17 @@ public class LocationTracker
     	}
     }
     
-    public void stop()
+    public synchronized void stop()
     {
     	started = false;
-    	if (listening)
+    	if (listening && listeners.size() == 0)
     	{
     		try
     		{    			
     			Log.i(null, "Unregistering Location Tracking");
     			listening = false;
-    			context.unregisterReceiver(intentReceiver);
     			locationManager.removeUpdates(intent);
+    			context.unregisterReceiver(intentReceiver);
     		}
     		catch (Exception e)
     		{
@@ -114,13 +114,13 @@ public class LocationTracker
     	}
     }
     
-    public void registerLocationListener(LocationListener listener)
+    public synchronized void registerLocationListener(LocationListener listener)
     {
     	listeners.add(listener);
     	if (started && !listening) start();
     }
     
-    public void unregisterLocationListener(LocationListener listener)
+    public synchronized void unregisterLocationListener(LocationListener listener)
     {
     	listeners.remove(listener);
     	if (listening && listeners.size() <= 0) stop();
@@ -152,14 +152,22 @@ public class LocationTracker
 
 	private void updateLocation(Intent intent) 
 	{
-		if (intent != null)
+		if (intent != null && started)
 		{			
 			Location l = (Location)intent.getExtra("location");
 			
 			if (l != null && isLocationOutdated(l))
 			{				
 				currentLocation = l;
-				notifyObservers(l);
+				
+				try
+				{					
+					notifyObservers(l);
+				}
+				catch (Exception e)
+				{
+					Log.w(null, "failed to update observers of location change");
+				}
 			}
 		}
 	}

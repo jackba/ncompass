@@ -5,11 +5,17 @@ import info.nymble.ncompass.R;
 
 import java.util.Map;
 
+import com.google.android.tests.core.LowLevelNetRunner;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -31,9 +37,19 @@ import android.view.View;
  * 
  */
 public class TargetCompass extends View {
-	private Drawable nwse_raw = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
-	private Drawable needle_raw = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_needle);
+	public static final int SILVER = 0;
+	public static final int BLACK = 1;
+	public static final int WHITE = 2;
 
+	private Drawable[] needles = new Drawable[]{getResources().getDrawable(R.drawable.compass_needle_gray), 
+			getResources().getDrawable(R.drawable.compass_needle_black),
+			getResources().getDrawable(R.drawable.compass_needle_white)
+	};
+	private Drawable nwse_raw = getResources().getDrawable(R.drawable.compass_nwse);
+	private Drawable needle_raw = needles[SILVER];
+
+	
+	private boolean powerSaver = true;
 	private int color = 0xFFFFFFFF;
 	private Drawable nwse = null;
 	private Drawable needle = null;
@@ -46,7 +62,7 @@ public class TargetCompass extends View {
 	
 //	private final String no_bearing_message = "Current Bearing Unknown";
 //	private final String no_target_message = "No Target Set";
-//	private final Paint error_message_paint = buildErrorPaint();
+	private final Paint error_message_paint = buildErrorPaint();
 	
 	// variables for containing and rotating the compass images
 	private Rect bounds = new Rect(); 	// the square bounding rectangle into which we draw the compass
@@ -113,9 +129,73 @@ public class TargetCompass extends View {
 	
 	public void setColor(int color)
 	{
-		this.color = color;
+		this.color = color | 0xFF000000;
 		nwse = null;
+		needle = null;
+		this.invalidate();
 	}
+	
+	public int getColor()
+	{
+		return this.color;
+	}
+	
+	
+	@Override
+	public void press(boolean autoUnpress)
+	{
+		this.color = color & 0x7FFFFFFF;
+		nwse = null;
+		needle = null;
+		this.invalidate();
+	}
+	
+	
+	@Override
+	public void unpress()
+	{
+		this.color = color | 0x80000000;
+		nwse = null;
+		needle = null;
+		this.invalidate();
+	}
+	
+	
+	public void setPowerSaver(boolean b)
+	{
+		if (b != powerSaver)
+		{
+			powerSaver = b;
+			nwse = null; 
+			needle = null;
+			this.invalidate();
+		}
+	}
+	
+	
+	public boolean getPowerSaver()
+	{
+		return powerSaver;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	public void setNeedle(int needleId)
+	{
+		if (needleId >=0 && needleId < needles.length){
+			needle_raw = needles[needleId];
+			needle = null;
+			this.invalidate();
+		}
+	}
+	
+	
 	
 	
 
@@ -200,41 +280,29 @@ public class TargetCompass extends View {
 	 */
 	protected void onDraw(Canvas canvas) {
 		this.onDrawBackground(canvas);
-		if (nwse == null) initialize();
-		
-		
+		boolean isPressed = (color & 0x80000000) == 0;
+		if (nwse == null || needle == null) initialize();
 		
 		long time = System.currentTimeMillis();
-		
 		if (nwse_display.isVisible()) 
 		{
-			canvas.save(Canvas.HAS_ALPHA_LAYER_SAVE_FLAG);
 			canvas.save();
+			if (isPressed) canvas.translate(2, 2);
 			canvas.rotate(nwse_display.getBearing(), cx, cy);
-			
-			
-			nwse.draw(canvas);
-			time = logTime(time, "nwse");
-//			canvas.drawText("N", (bounds.left + bounds.right)/2 - 5, bounds.top + 10,error_message_paint);
+			nwse.draw(canvas); time = logTime(time, "nwse");
 
 			if (needle_display.isVisible()) 
 			{
+				if (isPressed) canvas.translate(-2, -2);
 				canvas.rotate(needle_display.getBearing(), cx, cy);
-				needle.draw(canvas);
-				time = logTime(time, "needle");
+				needle.draw(canvas); time = logTime(time, "needle");
 
-//				new Arrow().draw(canvas);
-//				canvas.drawText("T", (bounds.left + bounds.right)/2 - 5, bounds.top + 20,error_message_paint);
 				canvas.restore();
 			} else 
 			{
 				canvas.restore();
 //				canvas.drawText(no_target_message, cx, cy, error_message_paint);
 			}
-			
-			
-//			cover.draw(canvas);
-//			time = logTime(time, "cover");
 		} 
 		else 
 		{
@@ -308,22 +376,43 @@ public class TargetCompass extends View {
 	 * 
 	 * @return the constructed paint object
 	 */
-//	private Paint buildErrorPaint() {
-//		Paint p = new Paint();
-//		p.setARGB(0xFF, 0xF9, 0x9F, 00);
-//		p.setTextAlign(Paint.Align.CENTER);
-//		p.setTextSize(14);
-//		p.setTypeface(Typeface.create("Georgia", Typeface.BOLD));
-//		p.setAntiAlias(true);
-//
-//		return p;
-//	}
+	private Paint buildErrorPaint() {
+		Paint p = new Paint();
+		p.setARGB(0xFF, 0xF9, 0x9F, 00);
+		p.setTextAlign(Paint.Align.CENTER);
+		p.setTextSize(14);
+		p.setTypeface(Typeface.create("Georgia", Typeface.BOLD));
+		p.setAntiAlias(true);
 
+		return p;
+	}
+
+	
 	
 	private void initialize()
 	{
-		if (nwse == null) nwse = buildScaledNWSE(nwse_raw, bounds, color);
-		if (needle == null) needle = buildScaledDrawable(needle_raw, bounds);
+		if (powerSaver)
+		{
+			if (nwse == null){
+				NWSE d = new NWSE();
+				
+				d.setBounds(bounds);
+				d.setColor(color);
+				nwse = d;
+			}
+			if (needle == null){
+				Arrow d = new Arrow();
+				
+				d.setBounds(bounds);
+				d.setColor(color);
+				needle = d;
+			}
+		}
+		else
+		{			
+			if (nwse == null) nwse = buildScaledNWSE(nwse_raw, bounds, color);
+			if (needle == null) needle = buildScaledDrawable(needle_raw, bounds);
+		}
 	}
 	
 	
@@ -541,58 +630,139 @@ public class TargetCompass extends View {
 	
 	
 	
-//	private class Arrow extends Drawable
-//	{
-//		Paint p = new Paint();
-//
-//		
-//		public Arrow()
-//		{			
-//			p.setARGB(0xFF, 0xFF, 0x32, 0x32);
-//			p.setAntiAlias(true);
-//			int cx = (bounds.right - bounds.left)/2;
-//		}
-//		
-//		@Override
-//		public void draw(Canvas c) {
-//			// TODO Auto-generated method stub
-//			
-////			Path path = new Path();
-////			Paint paint = error_message_paint;
-////			
-////			
-////			Rect r = bounds;
-////			int x = (bounds.right - bounds.left)/3;
-////			
-////			//f99f00
-////			path.moveTo(r.left + x, r.top + 2*x);
-////			path.lineTo(r.left + (int)(1.5*x), r.top);
-////			path.lineTo(r.left + 2*x, r.top + 2*x);
-////			path.lineTo(r.left + x, r.top + 2*x);
-////			
-////			c.drawPath(path, paint);
-//			c.drawCircle(cx, bounds.top + 15, 5.0F, p);
-//		}
-//
-//		@Override
-//		public int getOpacity() {
-//			// TODO Auto-generated method stub
-//			return 0;
-//		}
-//
-//		@Override
-//		public void setAlpha(int alpha) {
-//			// TODO Auto-generated method stub
-//			
-//		}
-//
-//		@Override
-//		public void setColorFilter(ColorFilter cf) {
-//			// TODO Auto-generated method stub
-//			
-//		}
-//		
-//	}
+	
+	
+	
+	
+
+	
+	
+	
+	
+	
+	
+	/**
+	 * Class for drawing a low CPU cost pointer
+	 *
+	 */
+	private static class Arrow extends Drawable
+	{
+		Paint p = new Paint();
+		Rect r = new Rect();
+		Path path = new Path();
+		
+		
+		public Arrow()
+		{			
+			p.setAntiAlias(true);
+		}
+		
+		
+		@Override
+		public void draw(Canvas c) {
+			c.drawPath(path, p);
+		}
+
+		
+		
+		
+		public void setBounds(Rect bounds)
+		{
+			this.r = bounds;
+			int x = (r.right - r.left)/8;
+			
+			path = new Path();
+			path.moveTo(r.left + 3*x, r.top + 6*x);
+			path.lineTo(r.left + 3*x, r.top + 3*x);
+			path.lineTo(r.left + 2*x, r.top + 3*x);
+			path.lineTo(r.left + 4*x, r.top + 1*x);
+			path.lineTo(r.left + 6*x, r.top + 3*x);
+			path.lineTo(r.left + 5*x, r.top + 3*x);
+			path.lineTo(r.left + 5*x, r.top + 6*x);
+			path.lineTo(r.left + 3*x, r.top + 6*x);			
+		}
+		
+		public void setColor(int color)
+		{
+			p.setColor(color);
+		}
+		
+		
+		
+		
+		@Override
+		public int getOpacity() {
+			return 0;
+		}
+
+		@Override
+		public void setAlpha(int alpha) {}
+
+		@Override
+		public void setColorFilter(ColorFilter cf) {}
+	}
+	
+	
+	
+	/**
+	 * Class for drawing a low CPU cost nsew
+	 */
+	private static class NWSE extends Drawable
+	{
+		Paint p = new Paint();
+		Rect r = new Rect();
+		float[] coordinates = new float[8];
+		
+		
+		public NWSE()
+		{			
+			p.setAntiAlias(true);
+		}
+		
+		
+		@Override
+		public void draw(Canvas c) {
+			c.drawText("N", coordinates[0], coordinates[1], p);
+			c.drawText("S", coordinates[2], coordinates[3], p);
+			c.drawText("E", coordinates[4], coordinates[5], p);
+			c.drawText("W", coordinates[6], coordinates[7], p);
+		}
+
+		
+		
+		
+		public void setBounds(Rect bounds)
+		{
+			this.r = bounds;
+			float cx = (bounds.left + bounds.right)/2;
+			float cy = (bounds.top + bounds.bottom)/2;
+			
+			
+			coordinates[0] = cx; coordinates[1] = bounds.top + 5;
+			coordinates[2] = cx; coordinates[3] = bounds.bottom - 5;
+			coordinates[4] = bounds.right - 5; coordinates[5] = cy;
+			coordinates[6] = bounds.left + 5; coordinates[7] = cy;			
+		}
+		
+		public void setColor(int color)
+		{
+			p.setColor(color);
+		}
+		
+		
+		
+		
+		@Override
+		public int getOpacity() {
+			return 0;
+		}
+
+		@Override
+		public void setAlpha(int alpha) {}
+
+		@Override
+		public void setColorFilter(ColorFilter cf) {}
+	}
 }
 
 

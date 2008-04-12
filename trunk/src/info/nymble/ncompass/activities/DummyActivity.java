@@ -58,58 +58,58 @@ protected void onCreate(Bundle icicle) {
 //    
 //    
     
+    this.setContentView(R.layout.dummy);
     
-    
-    Rect r = new Rect(0,0,250,250);
-    BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
-    BitmapDrawable nwse_p  = buildScaledDrawable(nwse, r);
-    nwse.setBounds(r);
-    
-    
-    Bitmap b = Bitmap.createBitmap(r.right, r.bottom, true);
-    Canvas c = new Canvas(b);
-    
-    Bitmap b1 = Bitmap.createBitmap(r.right, r.bottom, true);
-    Canvas c1 = new Canvas(b1);
-    
-    
-    long time = System.currentTimeMillis();
-    
-    time = System.currentTimeMillis();
-    for (int i = 0; i < 360; i++) {
-    	c.rotate(1);
-    	nwse.draw(c);
-    }
-    time = logTime(time, "regular");
-    
-    for (int i = 0; i < 360; i++) {
-    	c1.rotate(1);
-    	nwse_p.draw(c1);
-    }
-    time = logTime(time, "regular");
-    
-    
-    
-    
-
-    i1 = new ImageView(this);
-    i1.setImageBitmap(b);
-    this.setContentView(i1);
-    
-    
-    
-    
+//    Rect r = new Rect(0,0,250,250);
+//    BitmapDrawable nwse = (BitmapDrawable) getResources().getDrawable(R.drawable.compass_nwse);
+//    BitmapDrawable nwse_p  = buildScaledDrawable(nwse, r);
+//    nwse.setBounds(r);
+//    
+//    
+//    Bitmap b = Bitmap.createBitmap(r.right, r.bottom, true);
+//    Canvas c = new Canvas(b);
+//    
+//    Bitmap b1 = Bitmap.createBitmap(r.right, r.bottom, true);
+//    Canvas c1 = new Canvas(b1);
+//    
+//    
+//    long time = System.currentTimeMillis();
+//    
+//    time = System.currentTimeMillis();
+//    for (int i = 0; i < 360; i++) {
+//    	c.rotate(1);
+//    	nwse.draw(c);
+//    }
+//    time = logTime(time, "regular");
+//    
+//    for (int i = 0; i < 360; i++) {
+//    	c1.rotate(1);
+//    	nwse_p.draw(c1);
+//    }
+//    time = logTime(time, "regular");
+//    
+//    
+//    
+//    
+//
+//    i1 = new ImageView(this);
+//    i1.setImageBitmap(b);
+//    this.setContentView(i1);
+//    
     
     
     
     
-//    try {
-//    	MediaPlayer mp = MediaPlayer.create(this, R.raw.target_ahead);
-////		mp.prepare();
-//		mp.start();
-//	} catch (Exception e) {
-//		Log.e(null, "bit of a problem " + e.getMessage(), e);
-//	}
+    
+    
+    
+    try {
+    	MediaPlayer mp = MediaPlayer.create(this, R.raw.mph);
+//		mp.prepare();
+		mp.start();
+	} catch (Exception e) {
+		Log.e(null, "bit of a problem " + e.getMessage(), e);
+	}
 }
 
 
