@@ -8,6 +8,15 @@
     android:paddingLeft="6dip"
     android:paddingRight="6dip"
     android:paddingBottom="3dip">
+   	
+   	
+   	<TextView
+		android:id="@+id/label"
+		android:layout_width="fill_parent"	
+		android:layout_height="wrap_content"
+		android:textAlign="start"
+	/>	
+   	
    					  
     <EditText android:id="@+id/content" 
         android:maxLines="1" 
