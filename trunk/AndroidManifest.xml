@@ -41,6 +41,7 @@
 
 
      	<activity android:name=".activities.DummyActivity"  android:label="Dummy Activity"/>
+     	<activity android:name=".activities.DisplaySettingsActivity"  android:label="Compass Display Options"/>
 		<activity android:name=".activities.InputFieldActivity"  android:label="Enter Option"/>
 
 		<activity android:name=".activities.AddListActivity" android:label="@string/new_list_title">
