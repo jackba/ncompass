@@ -41,8 +41,7 @@ public class DisplaySettingsActivity extends Activity
 	    colors = (RadioGroup)findViewById(R.id.colors);
 		colorText = (EditText)findViewById(R.id.color_text);
 
-        setTitle("Compass Display Settings");
-        loadValues();
+
 		
 	    
 	    colors.setOnCheckedChangeListener(new OnCheckedChangeListener()
@@ -53,7 +52,7 @@ public class DisplaySettingsActivity extends Activity
 				if (R.id.other == checkedItem)
 				{
 					colorText.setVisibility(EditText.VISIBLE);
-					colorText.requestFocus();
+					colorText.requestFocus();				
 				}
 				else
 				{					
@@ -62,8 +61,9 @@ public class DisplaySettingsActivity extends Activity
 			}
 		});
 	    
-	    
-	    
+        setTitle("Compass Display Settings");
+        loadValues();
+
         Button ok = (Button)findViewById(R.id.ok);
         ok.setOnClickListener(
 	        new Button.OnClickListener() {
@@ -84,16 +84,25 @@ public class DisplaySettingsActivity extends Activity
         );
 	}
 
-	
-	
+	@Override
+	protected void onStart() {
+		displays.requestFocus();
+		super.onStart();
+	}
+
+
+
+
+
+
+
 	private void loadValues()
 	{
 		Intent intent = getIntent();
-    	String color = Integer.toHexString( intent.getIntExtra(COMPASS_COLOR, 0xFFAA3333));
+//    	String color = Integer.toHexString( intent.getIntExtra(COMPASS_COLOR, 0xFFAA3333));
     	int display = intent.getIntExtra(DISPLAY_MODE, -1);
     	
-		colors.check( R.id.other );
-		colorText.setText(color);
+		colors.check( R.id.orange );
 		
 		switch (display)
 		{
@@ -111,7 +120,7 @@ public class DisplaySettingsActivity extends Activity
 			break;
 		}
 		
-		displays.requestFocus();
+		findViewById(R.id.power_saver).requestFocus();
 	}
 	
 	
@@ -158,7 +167,7 @@ public class DisplaySettingsActivity extends Activity
     {    
     	Bundle bundle = new Bundle();
 		
-    	Log.w("CompassDisplayOptions", "color=" + color + " display=" + display);
+    	Log.i("CompassDisplayOptions", "color=" + color + " display=" + display);
     	bundle.putString(COMPASS_COLOR, color);
     	bundle.putInt(DISPLAY_MODE, display);
         

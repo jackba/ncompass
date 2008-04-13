@@ -52,7 +52,9 @@ public class TargetCompassActivity extends Activity
 	
 	
 	private Rect compassCoords = null;
+	private Rect titleCoords = null;
 	private boolean compassDown = false;
+	private boolean titleDown = false;
 	
     
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -164,24 +166,50 @@ public class TargetCompassActivity extends Activity
 		if (compassCoords == null){
 			compassCoords = new Rect();
 			compass.getGlobalVisibleRect(compassCoords);
+			
+			titleCoords = new Rect();
+			title.getGlobalVisibleRect(titleCoords);
 		}
+		int x = (int)event.getX();
+		int y = (int)event.getY();
 		
-		if (MotionEvent.ACTION_DOWN == event.getAction() && 
-				compassCoords.contains((int)event.getX(), (int)event.getY()))
+		if (MotionEvent.ACTION_DOWN == event.getAction())
 		{
-			compass.press(false);
-			compassDown = true;
+			if (compassCoords.contains(x, y))
+			{				
+				compass.press(false);
+				compassDown = true;
+			}
+			else if (titleCoords.contains(x, y))
+			{
+				title.setBackgroundColor(title.getCurrentTextColor() & 0x8FFFFFFF);
+				titleDown = true;
+			}
 		}
-		else if (MotionEvent.ACTION_UP == event.getAction() && compassDown)
+		else if (MotionEvent.ACTION_UP == event.getAction())
 		{
-			compassDown = false;
-			compass.unpress();
-			targetHere();
+			if (compassDown)
+			{				
+				compassDown = false;
+				compass.unpress();
+				targetHere();
+			}
+			else if (titleDown)
+			{
+				titleDown = false;
+				title.setBackgroundColor(0x00000000);
+				targetTitle();
+			}
 		}
-		else if (compassDown && !compassCoords.contains((int)event.getX(), (int)event.getY()))
+		else if (compassDown && !compassCoords.contains(x, y))
 		{
 			compass.unpress();
 			compassDown = false;
+		}
+		else if (titleDown && !titleCoords.contains(x, y))
+		{
+			title.setBackgroundColor(0x00000000);
+			titleDown = false;
 		}
 
 		return super.onTouchEvent(event);
@@ -200,7 +228,7 @@ public class TargetCompassActivity extends Activity
 				setColor(data, true);
 				break;
 			case TITLE_TARGET:
-				if (tracker != null) setAndLogTarget(tracker.getCurrentLocation(), data);
+				logTargetTitle(data);
 				break;
 			case DISPLAY_SETTINGS:
 				setColor(extras.getString(DisplaySettingsActivity.COMPASS_COLOR), true);
@@ -232,44 +260,39 @@ public class TargetCompassActivity extends Activity
     {
 		final Context context = this;
 		
-        menu.add(1, 1, "Target Here", new Runnable()
+        menu.add(1, 1, "Set Target Title", new Runnable()
         {
             public void run()
             {
-                targetHere();
-            }
-        }
-        );
-        
-        menu.add(2, 1, "Silver Needle", new Runnable()
-        {
-            public void run()
-            {
-                setNeedle(TargetCompass.SILVER, true);
+                targetTitle();
             }
         }
         );
         
         
-        menu.add(3, 1, "White Needle", new Runnable()
+        menu.add(1, 1, "Send Target", new Runnable()
         {
             public void run()
             {
-            	setNeedle(TargetCompass.WHITE, true);
+                Log.w("menu", "sending target");
             }
         }
         );
         
         
-        menu.add(4, 1, "Black Needle", new Runnable()
+        menu.add(1, 1, "Map Target", new Runnable()
         {
             public void run()
             {
-            	setNeedle(TargetCompass.BLACK, true);
+                Log.w("menu", "mapping target");
             }
         }
         );
         
+        
+        
+        
+
         
         menu.add(1, 2, "Set Color", new Runnable()
         {
@@ -535,10 +558,21 @@ public class TargetCompassActivity extends Activity
     {
     	setTarget(t, titleText);
     	ContentResolver resolver = this.getContentResolver();    	
+    	PlaceBook.Places.add(resolver, t, listId);
+    }
+    
+    private void logTargetTitle(String titleText)
+    {
+    	Location t = compass.getTarget();
+    	setTarget(t, titleText);
+    	ContentResolver resolver = this.getContentResolver();    	
     	Uri place = PlaceBook.Places.add(resolver, t, listId);
     	long placeId = Long.parseLong(place.getLastPathSegment());
     	PlaceBook.Places.update(resolver, placeId, titleText, null, null);
     }
+    
+    
+    
     
     
     
@@ -569,6 +603,12 @@ public class TargetCompassActivity extends Activity
 	
 	private void targetHere()
 	{
+		if (tracker != null) setAndLogTarget(tracker.getCurrentLocation(), null);
+	}
+	
+	
+	private void targetTitle()
+	{
 		Intent i = new Intent(this, InputFieldActivity.class);
 
     	i.putExtra(InputFieldActivity.TITLE, "Title Your Target");
@@ -576,6 +616,8 @@ public class TargetCompassActivity extends Activity
 
     	startSubActivity(i, TITLE_TARGET);
 	}
+	
+	
 	
 	
 	
