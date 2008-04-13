@@ -6,13 +6,22 @@
 	<uses-permission android:name="android.permission.ACCESS_GPS" />
 	<uses-permission android:name="android.permission.ACCESS_ASSISTED_GPS" />
 	<uses-permission android:name="android.permission.ACCESS_CELL_ID" />
-
+	<uses-permission android:name="android.permission.RECEIVE_SMS" />
 
     <application android:theme="@style/Theme" >
     	
 
 		<provider android:name="PlaceBookProvider"
 	            android:authorities="info.nymble.ncompass.placebook" />
+
+
+        <receiver android:name=".activities.LocationReceiver">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>    
+
+
 
 
     	<activity 
@@ -38,11 +47,10 @@
         </activity>
 
 
-
-
      	<activity android:name=".activities.DummyActivity"  android:label="Dummy Activity"/>
      	<activity android:name=".activities.DisplaySettingsActivity"  android:label="Compass Display Options"/>
 		<activity android:name=".activities.InputFieldActivity"  android:label="Enter Option"/>
+		<activity android:name=".activities.SendLocationActivity"  android:label="Send A Location To A Friend"/>
 
 		<activity android:name=".activities.AddListActivity" android:label="@string/new_list_title">
             <intent-filter>

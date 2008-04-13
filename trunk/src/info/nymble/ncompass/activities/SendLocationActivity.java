@@ -10,8 +10,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class DummyActivity extends Activity
+
+
+
+
+public class SendLocationActivity extends Activity
 {
+	public static final String PARAM_ADDRESS = "Address";
+	
+	
 	EditText to;
 	EditText message;
 	
@@ -21,7 +28,7 @@ public class DummyActivity extends Activity
 	    super.onCreate(icicle);
 	    
 	
-	    this.setContentView(R.layout.dummy);
+	    this.setContentView(R.layout.send_location);
 	
 	    to = (EditText)findViewById(R.id.to);
 	    message = (EditText)findViewById(R.id.message);
@@ -55,7 +62,7 @@ public class DummyActivity extends Activity
 	private void loadValues()
 	{
 		Intent intent = getIntent();
-    	message.setText(intent.getStringExtra("Address"));
+    	message.setText("\n\n( " + intent.getStringExtra("Address") + " )");
 	}
 	
 

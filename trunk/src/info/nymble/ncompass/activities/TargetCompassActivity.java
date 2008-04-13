@@ -288,7 +288,14 @@ public class TargetCompassActivity extends Activity
         {
             public void run()
             {
-                Log.w("menu", "sending target");
+         		Location t = compass.getTarget();
+        		String uri = "geo:" + t.getLatitude() + "," + t.getLongitude();
+        		Intent i = new Intent(context, SendLocationActivity.class);
+        	
+        		i.putExtra(SendLocationActivity.PARAM_ADDRESS, uri);
+        		
+        		Log.i(null, "loading map at uri=" + uri);
+        		startActivity(i);
             }
         }
         );
@@ -298,11 +305,11 @@ public class TargetCompassActivity extends Activity
         {
             public void run()
             {
-         		Location t = compass.getTarget();
+            	Location t = compass.getTarget();
         		Uri uri = Uri.parse("geo:" + t.getLatitude() + "," + t.getLongitude());
         		Intent i = new Intent(Intent.VIEW_ACTION, uri);
         	
-        		Log.i(null, "loading map at uri=" + uri);
+        		Log.i(null, "loading location of uri=" + uri);
         		startActivity(i);
             }
         }
