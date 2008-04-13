@@ -14,7 +14,11 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 
-public class DummyActivity extends Activity
+
+
+
+
+public class DisplaySettingsActivity extends Activity
 {
 	public static final String DISPLAY_MODE="display.mode";
 	public static final String COMPASS_COLOR="compass.color";
@@ -31,13 +35,15 @@ public class DummyActivity extends Activity
 	    super.onCreate(icicle);
 	    
 	
-	    this.setContentView(R.layout.dummy);
+	    this.setContentView(R.layout.display_settings);
 	    
 		displays = (RadioGroup)findViewById(R.id.options);	    
 	    colors = (RadioGroup)findViewById(R.id.colors);
 		colorText = (EditText)findViewById(R.id.color_text);
-	    
-	    
+
+        setTitle("Compass Display Settings");
+        loadValues();
+		
 	    
 	    colors.setOnCheckedChangeListener(new OnCheckedChangeListener()
 	    {
@@ -76,9 +82,6 @@ public class DummyActivity extends Activity
 	            }
 	        }
         );
-        
-        setTitle("Compass Display Settings");
-        loadValues();
 	}
 
 	
@@ -86,8 +89,8 @@ public class DummyActivity extends Activity
 	private void loadValues()
 	{
 		Intent intent = getIntent();
-    	String color = intent.getStringExtra("color");
-    	int display = intent.getIntExtra("display", -1);
+    	String color = Integer.toHexString( intent.getIntExtra(COMPASS_COLOR, 0xFFAA3333));
+    	int display = intent.getIntExtra(DISPLAY_MODE, -1);
     	
 		colors.check( R.id.other );
 		colorText.setText(color);

@@ -133,7 +133,6 @@
 	        android:capitalize="sentences"
 	        android:scrollHorizontally="false" 
 	        android:text="AA3333"
-	        android:visibility="gone"
 	        android:singleLine="true"
 	        android:selectAllOnFocus="true"/>
 		

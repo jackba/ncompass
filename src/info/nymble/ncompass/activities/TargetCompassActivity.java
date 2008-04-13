@@ -30,6 +30,7 @@ public class TargetCompassActivity extends Activity
 {
 	private final int SELECT_COLOR = 1;
 	private final int TITLE_TARGET = 2;
+	private final int DISPLAY_SETTINGS = 3;
 	
 	
 	private final Handler handler = new Handler();
@@ -196,12 +197,24 @@ public class TargetCompassActivity extends Activity
 			switch (requestCode)
 			{
 			case SELECT_COLOR:
-				int color = parseHex(data, 0);
-				if ((color & 0xFF000000) == 0) color |= 0xFF000000;
-				if (color != 0) setColor(color, true);
+				setColor(data, true);
 				break;
 			case TITLE_TARGET:
 				if (tracker != null) setAndLogTarget(tracker.getCurrentLocation(), data);
+				break;
+			case DISPLAY_SETTINGS:
+				setColor(extras.getString(DisplaySettingsActivity.COMPASS_COLOR), true);
+				int display = extras.getInt(DisplaySettingsActivity.DISPLAY_MODE);
+				
+				if (display == -1)
+				{
+					setPowerSaver(true, true);
+				}
+				else
+				{
+					setPowerSaver(false, true);
+					setNeedle(display, true);
+				}
 				break;
 			default:
 				Log.i(null, "Requested something, but not sure what it was requestCode=" + requestCode);
@@ -212,7 +225,7 @@ public class TargetCompassActivity extends Activity
 			Log.i(null, "cancelled request");
 		}
 	}
-	
+
 	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -273,11 +286,17 @@ public class TargetCompassActivity extends Activity
         }
         );
 
-        menu.add(2, 2, "Power Saver", new Runnable()
+        menu.add(2, 2, "Display Settings", new Runnable()
         {
             public void run()
             {
-            	setPowerSaver(!getPowerSaver(), true);
+            	Intent i = new Intent(context, DisplaySettingsActivity.class);
+                int display = (getPowerSaver() ? -1 : getNeedle()); 
+
+            	i.putExtra(DisplaySettingsActivity.DISPLAY_MODE, display);
+            	i.putExtra(DisplaySettingsActivity.COMPASS_COLOR, compass.getColor());
+
+            	startSubActivity(i, DISPLAY_SETTINGS);
             }
         }
         );
@@ -308,6 +327,13 @@ public class TargetCompassActivity extends Activity
     }
     
     
+    private void setColor(String c, boolean save)
+    {
+    	int color = parseHex(c, 0);
+		if ((color & 0xFF000000) == 0) color |= 0xFF000000;
+		if (color != 0) setColor(color, true);
+    }
+    
     private void setColor(int color, boolean save)
     {
     	if (save)
@@ -325,12 +351,16 @@ public class TargetCompassActivity extends Activity
         eta.setTextColor(color);
     }
     
+    private int getNeedle()
+    {
+    	return preferences.getInt("needle", TargetCompass.BLACK);
+    }
     
     private void setNeedle()
     {
     	try
     	{    		
-    		setNeedle(preferences.getInt("needle", TargetCompass.BLACK), false);
+    		setNeedle(getNeedle(), false);
     	}
     	catch (Exception e)
     	{
