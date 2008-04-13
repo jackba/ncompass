@@ -86,7 +86,7 @@ public final class PlaceBook
         	resolver.delete(Uri.withAppendedPath(PLACES_URI, String.valueOf(id)), null, null);
         }
 
-        public static void update(ContentResolver resolver, long id, String title, Uri picture, Uri contact)
+        public static void update(ContentResolver resolver, long id, String title, Uri picture, String contact)
         {
         	ContentValues values = new ContentValues();
 			
