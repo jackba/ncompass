@@ -2,6 +2,7 @@ package info.nymble.ncompass.activities;
 
 import info.nymble.ncompass.LocationListener;
 import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.view.AudioStatus;
 import info.nymble.ncompass.view.Format;
@@ -10,10 +11,12 @@ import info.nymble.ncompass.view.TargetCompass;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -24,6 +27,8 @@ import android.widget.TextView;
 public class TargetCompassActivity extends Activity
 {
 	private final int SELECT_COLOR = 1;
+	private final int TITLE_TARGET = 2;
+	
 	
 	private final Handler handler = new Handler();
 	
@@ -38,184 +43,45 @@ public class TargetCompassActivity extends Activity
 	private TextView speed;
 	private TextView eta;
 
+	private SharedPreferences preferences;
+	private long listId;
 	
-	SharedPreferences preferences;
-	private int color;
 	
+	
+    
+    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Lifetime Event Handlers
+     +++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
     @Override
     public void onCreate(Bundle icicle)
     {
 		super.onCreate(icicle);
 		setContentView(R.layout.target_compass);
 		
-		long time = logTime(System.currentTimeMillis(), "start");
-		preferences = this.getPreferences(0);	time = logTime(time, "1");
-		compass = (TargetCompass) findViewById(R.id.compass);  time = logTime(time, "2");
-		
+		preferences = this.getPreferences(0);
+		compass = (TargetCompass) findViewById(R.id.compass);
 		title = (TextView) findViewById(R.id.place_title);        
 		distance = (TextView) findViewById(R.id.place_distance);
 		bearing = (TextView) findViewById(R.id.place_bearing);
 		target = (TextView) findViewById(R.id.place_target);
 		speed = (TextView) findViewById(R.id.place_speed);
 		eta = (TextView) findViewById(R.id.place_eta);
+		listId = PlaceBook.Lists.get(getContentResolver(), "targeted");
 		
-		
-		
-		setColor();	time = logTime(time, "3");
-		setNeedle();	time = logTime(time, "4");
-		loadLocationInfo();	time = logTime(time, "6");
-		
-//        testCompass(compass);
-		
-		
+		setColor();
+		setNeedle();
+		loadLocationInfo();
+		setPowerSaver();
+
 		handler.post( new Runnable(){
 			public void run()
-			{        		
+			{
 				setupTracking();
 			}
 		});
     }
     
-    
-    private void setupTracking()
-    {
-		tracker = new LocationTracker(this);   
-		setTarget(getIntent());	
-		setupLocationTracking();
-    }
-    
-    
-    
-	private long logTime(long startTime, String m)
-	{
-		long endTime = System.currentTimeMillis();
-		
-		Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
-		
-		return endTime;
-	}
-
-    
-
-    private void setColor()
-    {
-    	try
-    	{    		
-    		setColor(preferences.getInt("color", 0xFFF99F00), false);
-    	}
-    	catch (Exception e)
-    	{
-    		Log.w(null, "error occured while setting color " + e.getMessage());
-    	}
-    }
-    
-    
-    private void setColor(int color, boolean save)
-    {
-    	if (save)
-    	{
-    		SharedPreferences.Editor editor = preferences.edit();
-    		editor.putInt("color", color);
-    	    editor.commit();    		
-    	}
-    	this.color = color;
-        compass.setColor(color);
-        title.setTextColor(color);
-        distance.setTextColor(color);
-        bearing.setTextColor(color);
-        target.setTextColor(color);
-        speed.setTextColor(color);
-        eta.setTextColor(color);
-    }
-    
-    
-    private void setNeedle()
-    {
-    	try
-    	{    		
-    		setNeedle(preferences.getInt("needle", TargetCompass.BLACK), false);
-    	}
-    	catch (Exception e)
-    	{
-    		Log.w(null, "error occured while setting needle " + e.getMessage());
-    	}
-    }
-    
-    
-    private void setNeedle(int needleId, boolean save)
-    {
-    	if (save)
-    	{
-    		SharedPreferences.Editor editor = preferences.edit();
-    		editor.putInt("needle", needleId);
-    	    editor.commit();    		
-    	}
-        compass.setNeedle(needleId);
-    }
-    
-    
-    
-    
-    
-    
-    private void stashLocationInfo()
-    {
-    	Location location = compass.getLocation();
-    	Location target = compass.getTarget();
-    	
-   		SharedPreferences.Editor editor = preferences.edit();
-   		
-   		if (location != null)
-   		{   			
-   			editor.putString("location.latitude", "" + location.getLatitude());
-   			editor.putString("location.longitude", "" + location.getLongitude());
-   			editor.putString("location.altitude", "" + location.getAltitude());
-   			editor.putFloat("location.bearing", location.getBearing());
-   		}
-   		
-   		if (target != null)
-   		{   			
-   			editor.putString("target.latitude", "" + target.getLatitude());
-   			editor.putString("target.longitude", "" + target.getLongitude());
-   			editor.putString("target.altitude", "" + target.getAltitude());
-   		}
-   		
-   		editor.commit();    		
-    }
-    
-    private void loadLocationInfo()
-    {   
-    	Location location = new Location();
-    	
-   		location.setLatitude( Double.parseDouble( preferences.getString("location.latitude", "0") ) );
-   		location.setLongitude( Double.parseDouble( preferences.getString("location.longitude", "0") ) );
-   		location.setAltitude( Double.parseDouble( preferences.getString("location.altitude", "0") ) );
-   		location.setBearing( preferences.getFloat("location.bearing", 0.0F) );
-   		
-   		Location target = new Location();
-    	
-   		target.setLatitude( Double.parseDouble( preferences.getString("target.latitude", "0") ) );
-   		target.setLongitude( Double.parseDouble( preferences.getString("target.longitude", "0") ) );
-   		target.setAltitude( Double.parseDouble( preferences.getString("target.altitude", "0") ) );
-   		
-   		if (location.getLatitude() != 0 || location.getLongitude() != 0 || location.getBearing() != 0)
-   			setLocation(location);
-   		
-   		if ((target.getLatitude() != 0 || target.getLongitude() != 0 || target.getBearing() != 0))
-   			setTarget(target);
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
 	@Override
 	protected void onPause() 
 	{
@@ -241,9 +107,6 @@ public class TargetCompassActivity extends Activity
 		Log.w(null, "Starting again start ");
 	}	
 	
-	
-	
-	
 	@Override
 	protected void onDestroy() {
 		if (tracker != null){
@@ -251,8 +114,74 @@ public class TargetCompassActivity extends Activity
 		}
 		super.onDestroy();
 	}
+	
+
+	
+	
+	
+    
+    
+    
+    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Event Handlers
+     +++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		Log.w("KeyDown", "keyCode=" + keyCode);
+		
+		if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER){
+			compass.press(false);
+		}
+		
+		return super.onKeyDown(keyCode, event);
+	}
 
 
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		Log.w("KeyUp", "keyCode=" + keyCode);
+		
+		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT){
+			readOrientation();
+		}
+		else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER){
+			compass.unpress();
+			targetHere();
+		}
+		
+		return super.onKeyUp(keyCode, event);
+	}
+
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, String data, Bundle extras) 
+	{
+		super.onActivityResult(requestCode, resultCode, data, extras);
+		
+		if (resultCode == Activity.RESULT_OK)
+		{
+			switch (requestCode)
+			{
+			case SELECT_COLOR:
+				int color = parseHex(data, 0);
+				if ((color & 0xFF000000) == 0) color |= 0xFF000000;
+				if (color != 0) setColor(color, true);
+				break;
+			case TITLE_TARGET:
+				if (tracker != null) setAndLogTarget(tracker.getCurrentLocation(), data);
+				break;
+			default:
+				Log.i(null, "Requested something, but not sure what it was requestCode=" + requestCode);
+			}
+		}
+		else
+		{
+			Log.i(null, "cancelled request");
+		}
+	}
+	
+	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -262,7 +191,7 @@ public class TargetCompassActivity extends Activity
         {
             public void run()
             {
-                setTarget(tracker.getCurrentLocation());
+                targetHere();
             }
         }
         );
@@ -301,8 +230,6 @@ public class TargetCompassActivity extends Activity
         {
             public void run()
             {
-            	
-            	
             	Intent i = new Intent(context, InputFieldActivity.class);
                 
             	i.putExtra(InputFieldActivity.TITLE, "Select Compass Color");
@@ -313,68 +240,187 @@ public class TargetCompassActivity extends Activity
             }
         }
         );
-        
-        
-        
+
         menu.add(2, 2, "Power Saver", new Runnable()
         {
             public void run()
             {
-            	compass.setPowerSaver(!compass.getPowerSaver());
+            	setPowerSaver(!getPowerSaver(), true);
             }
         }
         );
         
         return true;
     }
+	
+	
+	
+
+
+    
+    
+    
+    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Set display settings and persist to preferences
+     +++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+    private void setColor()
+    {
+    	try
+    	{    		
+    		setColor(preferences.getInt("color", 0xFFF99F00), false);
+    	}
+    	catch (Exception e)
+    	{
+    		Log.w(null, "error occured while setting color " + e.getMessage());
+    	}
+    }
+    
+    
+    private void setColor(int color, boolean save)
+    {
+    	if (save)
+    	{
+    		SharedPreferences.Editor editor = preferences.edit();
+    		editor.putInt("color", color);
+    	    editor.commit();    		
+    	}
+        compass.setColor(color);
+        title.setTextColor(color);
+        distance.setTextColor(color);
+        bearing.setTextColor(color);
+        target.setTextColor(color);
+        speed.setTextColor(color);
+        eta.setTextColor(color);
+    }
+    
+    
+    private void setNeedle()
+    {
+    	try
+    	{    		
+    		setNeedle(preferences.getInt("needle", TargetCompass.BLACK), false);
+    	}
+    	catch (Exception e)
+    	{
+    		Log.w(null, "error occured while setting needle " + e.getMessage());
+    	}
+    }
+    
+    
+    private void setNeedle(int needleId, boolean save)
+    {
+    	if (save)
+    	{
+    		SharedPreferences.Editor editor = preferences.edit();
+    		editor.putInt("needle", needleId);
+    	    editor.commit();    		
+    	}
+        compass.setNeedle(needleId);
+    }
+
+    
+    private void stashLocationInfo()
+    {
+    	Location location = compass.getLocation();
+    	Location target = compass.getTarget();
+    	
+   		SharedPreferences.Editor editor = preferences.edit();
+   		
+   		if (location != null)
+   		{   			
+   			editor.putString("location.latitude", "" + location.getLatitude());
+   			editor.putString("location.longitude", "" + location.getLongitude());
+   			editor.putString("location.altitude", "" + location.getAltitude());
+   			editor.putFloat("location.bearing", location.getBearing());
+   		}
+   		
+   		if (target != null)
+   		{   			
+   			editor.putString("target.latitude", "" + target.getLatitude());
+   			editor.putString("target.longitude", "" + target.getLongitude());
+   			editor.putString("target.altitude", "" + target.getAltitude());
+   			editor.putString("target.title", "" + title.getText());
+   		}
+   		
+   		editor.commit();    		
+    }
+    
+    private void loadLocationInfo()
+    {   
+    	Location location = new Location();
+    	
+   		location.setLatitude( Double.parseDouble( preferences.getString("location.latitude", "0") ) );
+   		location.setLongitude( Double.parseDouble( preferences.getString("location.longitude", "0") ) );
+   		location.setAltitude( Double.parseDouble( preferences.getString("location.altitude", "0") ) );
+   		location.setBearing( preferences.getFloat("location.bearing", 0.0F) );
+   		
+   		Location target = new Location();
+    	
+   		target.setLatitude( Double.parseDouble( preferences.getString("target.latitude", "0") ) );
+   		target.setLongitude( Double.parseDouble( preferences.getString("target.longitude", "0") ) );
+   		target.setAltitude( Double.parseDouble( preferences.getString("target.altitude", "0") ) );
+   		
+   		if (location.getLatitude() != 0 || location.getLongitude() != 0 || location.getBearing() != 0)
+   			setLocation(location);
+   		
+   		if ((target.getLatitude() != 0 || target.getLongitude() != 0 || target.getBearing() != 0))
+   			setTarget(target, preferences.getString("target.title", ""));
+
+    }
+    
+    
+    private void setPowerSaver()
+    {
+    	try
+    	{    		
+    		setPowerSaver(getPowerSaver(), false);
+    	}
+    	catch (Exception e)
+    	{
+    		Log.w(null, "error occured while setting powersaver " + e.getMessage());
+    	}
+    }
+    
+    private void setPowerSaver(boolean on, boolean save)
+    {
+    	if (save)
+    	{
+    		SharedPreferences.Editor editor = preferences.edit();
+    		editor.putBoolean("powersaver", on);
+    	    editor.commit();    		
+    	}
+        compass.setPowerSaver(on);
+    }
+    
+    private boolean getPowerSaver()
+    {
+    	return preferences.getBoolean("powersaver", false);
+    }
+    
+    
+    
+    
+    
+    
+    
+
 
 	
 	
 	
 	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, String data, Bundle extras) 
-	{
-		super.onActivityResult(requestCode, resultCode, data, extras);
-		
-		switch (requestCode)
-		{
-		case SELECT_COLOR:
-			if (resultCode == Activity.RESULT_OK)
-			{
-				int color = parseHex(data, 0);
-				if ((color & 0xFF000000) == 0) color |= 0xFF000000;
-				if (color != 0) setColor(color, true);
-			}
-			else
-			{
-				Log.i(null, "cancelled request");
-			}
-			break;
-		default:
-			Log.i(null, "Requested something, but not sure what it was requestCode=" + requestCode);
-		}
-	}
+
 
 	
-	private static int parseHex(String hex, int dfault)
-	{
-		if (hex.startsWith("0x")) hex = hex.substring(2);
-		
-		try
-		{
-			long i = Long.parseLong(hex, 16);
-			return (int)i;
-		}
-		catch (NumberFormatException e)
-		{
-			return dfault;
-		}
-	}
-	
 
-
-
+    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Hidden Functionality
+     +++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+    
+    /**
+     * Updates all the display elements (compass and text views)
+     * to display the target and location.
+     */
 	private void updateDistance()
 	{
 		Location l = compass.getLocation();
@@ -391,66 +437,77 @@ public class TargetCompassActivity extends Activity
 				public void run()
 				{
 					distance.setText(Format.formatDistance(d));
-					target.setText("T=" + getDirections(a));
-					bearing.setText("N=" + getDirections(b));
+					target.setText("T=" + Format.formatAngle(a));
+					bearing.setText("N=" + Format.formatAngle(b));
 					speed.setText(Format.formatSpeed(s));
 					eta.setText("eta " + Format.formatTime((int)(d/s)));
 				}
 			});
 		}
 	}
-	
 
 	
-	private String getDirections(double angle)
-	{
-		int a = (int)angle;
-		if (angle < 0) a += 360;
-		
-		return "" + a + "°";
-//		if (a > 180)
-//		{
-//			return "L" + (360-a) + "°";
-//		}
-//		else
-//		{
-//			return "R" + a + "°";
-//		}
-	}
-	
-	
-	
-	
+	/**
+	 * Uses an intent to set the target. If no
+	 * target is supplied on the intent, the
+	 * current location is used as a target.
+	 * 
+	 * @param intent
+	 */
     private void setTarget(Intent intent)
     {
     	if (intent != null)
     	{
-    		Location t = (Location)intent.getExtra("Location");
-    		if (t != null)
+    		Location target = (Location)intent.getExtra("Location");
+    		String titleText = intent.getStringExtra("Title");
+    		
+    		if (target != null)
     		{    			
-    			setTarget(t);
-    		}
-    		else
-    		{    			
-    			setTarget(tracker.getCurrentLocation());
+    			setTarget(target, titleText);
     		}
     	}
     }
     
-	private void setTarget(Location t)
+    
+    private void setAndLogTarget(Location t, String titleText)
+    {
+    	setTarget(t, titleText);
+    	ContentResolver resolver = this.getContentResolver();    	
+    	Uri place = PlaceBook.Places.add(resolver, t, listId);
+    	long placeId = Long.parseLong(place.getLastPathSegment());
+    	PlaceBook.Places.update(resolver, placeId, titleText, null, null);
+    }
+    
+    
+    
+    /**
+     * Updates the compass to point at a new target
+     * @param t the location to point at
+     */
+	private void setTarget(Location t, String titleText)
 	{
 		compass.setTarget(t);
+		title.setText(titleText == null ? "" : titleText);
 		updateDistance();
-		if (t != null)
-		{
-//			long listId = Lists.get(getContentResolver(), "favorites");
-//			Places.add(getContentResolver(), t, listId);
-		}
+	}
+	
+	
+	private void targetHere()
+	{
+		Intent i = new Intent(this, InputFieldActivity.class);
+
+    	i.putExtra(InputFieldActivity.TITLE, "Title Your Target");
+    	i.putExtra(InputFieldActivity.LABEL, "Provide a title for your new target location");
+
+    	startSubActivity(i, TITLE_TARGET);
 	}
 	
 	
 	
-	
+	/**
+	 * Updates the activity to a new location.
+	 * @param l the location to use as current
+	 */
 	private void setLocation(Location l)
 	{
 		compass.setLocation(l);
@@ -458,8 +515,14 @@ public class TargetCompassActivity extends Activity
 	}
 	
 	
-	private void setupLocationTracking()
-	{    
+    /**
+     * Background routine for loading location information
+     * May take several seconds to accomplish. 
+     */
+    private void setupTracking()
+    {
+		tracker = new LocationTracker(this);   
+		setTarget(getIntent());	
 		listener = new LocationListener()
         {
 			public void locationChanged(Location newLocation) 
@@ -472,17 +535,35 @@ public class TargetCompassActivity extends Activity
         tracker.start();
 	}
 	
-	
+    
+    /**
+     * Reads a String representation of a hex number into a 
+     * int value
+     * @param hex the string representation of a hex number
+     * @param dfault the default value to return, if hex 
+     * cannot be interpreted 
+     * @return an int representing hex if possible, otherwise dfault
+     */
+	private static int parseHex(String hex, int dfault)
+	{
+		if (hex.startsWith("0x")) hex = hex.substring(2);
+		
+		try
+		{
+			long i = Long.parseLong(hex, 16);
+			return (int)i;
+		}
+		catch (NumberFormatException e)
+		{
+			return dfault;
+		}
+	}
 	
 
-	
-	
-	
-	
-	
-	
-
-
+	/**
+	 * Plays an audio stream that tells the user to current
+	 * NSEW bearing and bearing to target.
+	 */
 	private void readOrientation()
 	{
 		Location l = compass.getLocation();
@@ -515,119 +596,4 @@ public class TargetCompassActivity extends Activity
 			new AudioStatus.MultifileAudio(AudioStatus.buildMediaArray(list, this)).play();
 		}
 	}
-	
-	
-
-	
-	
-	
-	
-	
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		Log.w("KeyDown", "keyCode=" + keyCode);
-		
-		if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER){
-			compass.press(false);
-		}
-		
-		return super.onKeyDown(keyCode, event);
-	}
-
-
-
-	@Override
-	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		Log.w("KeyUp", "keyCode=" + keyCode);
-		
-		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT){
-			readOrientation();
-		}
-		else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER){
-			compass.unpress();
-		}
-		
-		return super.onKeyUp(keyCode, event);
-	}
-
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-//	private static class Images
-//	{
-//		private static int i = 0;
-//		private static int[] ids = new int[]{R.drawable.gallery_photo_1, 
-//				R.drawable.gallery_photo_2, 
-//				R.drawable.gallery_photo_3, 
-//				R.drawable.gallery_photo_4, 
-//				R.drawable.gallery_photo_5, 
-//				R.drawable.gallery_photo_6};
-//		
-//		private static int getNext()
-//		{
-//			i = (i + 1) % 6;
-//			Log.i(null, "changing image to " + ids[i]);
-//			return ids[i];
-//		}
-//	}
-	
-//	
-//	private void testCompass(final TargetCompass compass)
-//	{
-//		new Thread()
-//		{
-//			public void run()
-//			{
-//				Location[] l = loadLocationArray(4);
-//				Location[] t = loadLocationArray(4);
-//				
-//				for (int i = 0; i < l.length; i++) {
-//					l[i].setLatitude(37.447524150941874);
-//					l[i].setLongitude(-122.11882744124402);
-//					l[i].setBearing(i*-90);
-//				}
-//				
-//				//west
-//				t[0].setLatitude(37.447524150941874);
-//				t[0].setLongitude(-123.11882744124402);
-//				
-//				// north
-//				t[1].setLatitude(38.447524150941874);
-//				t[1].setLongitude(-122.11882744124402);
-//				
-//				// east
-//				t[2].setLatitude(37.447524150941874);
-//				t[2].setLongitude(-121.11882744124402);
-//								
-//				// south
-//				t[3].setLatitude(36.447524150941874);
-//				t[3].setLongitude(-122.11882744124402);
-//				
-//				for (int j = 0; j < l.length; j++) {					
-//					setTarget(t[j]);
-//					try { Thread.sleep(500); } catch (Exception e){}
-//					setLocation(l[j]);
-//					try { Thread.sleep(4000); } catch (Exception e){}
-//				}
-//			}
-//		}.start();
-//	}
-//	
-//	private Location[] loadLocationArray(int items)
-//	{
-//		Location[] l = new Location[items];
-//		
-//		for (int i = 0; i < l.length; i++) {
-//			l[i] = new Location();
-//		}
-//		
-//		return l;
-//	}
 }

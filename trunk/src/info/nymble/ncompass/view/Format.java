@@ -120,17 +120,7 @@ public class Format
     }
 
     
-    private static int findChunk(double inches)
-    {
-        for (int i = chunkSizes.length - 1; i >= 0; i--)
-        {
-            if (chunkSizes[i] <= inches) 
-            {
-                return i;
-            }
-        }
-        return 0;
-    }
+
     
     
     
@@ -163,6 +153,28 @@ public class Format
         return buffer.toString();
     }
     
+    
+	public static String formatAngle(double angle)
+	{
+		int a = (int)angle;
+		if (angle < 0) a += 360;
+		
+		return "" + a + "°";
+		
+//		if (a > 180)
+//		{
+//			return "L" + (360-a) + "°";
+//		}
+//		else
+//		{
+//			return "R" + a + "°";
+//		}
+	}
+    
+    
+    
+    
+    
     private static void roundNumber(double number, StringBuffer buffer)
     {
         if (number > 10)
@@ -179,5 +191,17 @@ public class Format
         }
         
         numberFormat.format(number, buffer, null);
+    }
+
+    private static int findChunk(double inches)
+    {
+        for (int i = chunkSizes.length - 1; i >= 0; i--)
+        {
+            if (chunkSizes[i] <= inches) 
+            {
+                return i;
+            }
+        }
+        return 0;
     }
 }

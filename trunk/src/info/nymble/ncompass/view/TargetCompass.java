@@ -5,17 +5,14 @@ import info.nymble.ncompass.R;
 
 import java.util.Map;
 
-import com.google.android.tests.core.LowLevelNetRunner;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.Typeface;
+import android.graphics.Paint.Align;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -41,6 +38,7 @@ public class TargetCompass extends View {
 	public static final int BLACK = 1;
 	public static final int WHITE = 2;
 
+	
 	private Drawable[] needles = new Drawable[]{getResources().getDrawable(R.drawable.compass_needle_gray), 
 			getResources().getDrawable(R.drawable.compass_needle_black),
 			getResources().getDrawable(R.drawable.compass_needle_white)
@@ -49,21 +47,13 @@ public class TargetCompass extends View {
 	private Drawable needle_raw = needles[SILVER];
 
 	
+	private boolean pressed = false;
 	private boolean powerSaver = true;
 	private int color = 0xFFFFFFFF;
 	private Drawable nwse = null;
 	private Drawable needle = null;
 
-	
-	//	private Drawable arrow;
 
-
-	
-	
-//	private final String no_bearing_message = "Current Bearing Unknown";
-//	private final String no_target_message = "No Target Set";
-	private final Paint error_message_paint = buildErrorPaint();
-	
 	// variables for containing and rotating the compass images
 	private Rect bounds = new Rect(); 	// the square bounding rectangle into which we draw the compass
 	private float cx; 					// center of the screen on the horizontal axis
@@ -77,6 +67,11 @@ public class TargetCompass extends View {
 	
 	
 	
+	
+	
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Constructors
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	
 	public TargetCompass(Context c) 
 	{
@@ -95,11 +90,6 @@ public class TargetCompass extends View {
 	}
 
 
-
-
-
-
-
 	public TargetCompass(Context c, Location location) 
 	{
 		this(c);
@@ -113,6 +103,13 @@ public class TargetCompass extends View {
 		this.target = target;
 	}
 
+	
+	
+	
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Target and Location setters/getters
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	
 	/**
 	 * Alters the location that is being pointed at. The target must not be null
 	 * and should include a latitude and longitude.
@@ -124,80 +121,6 @@ public class TargetCompass extends View {
 		target = t;
 		updateView();
 	}
-	
-	
-	
-	public void setColor(int color)
-	{
-		this.color = color | 0xFF000000;
-		nwse = null;
-		needle = null;
-		this.invalidate();
-	}
-	
-	public int getColor()
-	{
-		return this.color;
-	}
-	
-	
-	@Override
-	public void press(boolean autoUnpress)
-	{
-		this.color = color & 0x7FFFFFFF;
-		nwse = null;
-		needle = null;
-		this.invalidate();
-	}
-	
-	
-	@Override
-	public void unpress()
-	{
-		this.color = color | 0x80000000;
-		nwse = null;
-		needle = null;
-		this.invalidate();
-	}
-	
-	
-	public void setPowerSaver(boolean b)
-	{
-		if (b != powerSaver)
-		{
-			powerSaver = b;
-			nwse = null; 
-			needle = null;
-			this.invalidate();
-		}
-	}
-	
-	
-	public boolean getPowerSaver()
-	{
-		return powerSaver;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	public void setNeedle(int needleId)
-	{
-		if (needleId >=0 && needleId < needles.length){
-			needle_raw = needles[needleId];
-			needle = null;
-			this.invalidate();
-		}
-	}
-	
-	
-	
-	
 
 	/**
 	 * @see setTarget(Location t)
@@ -268,9 +191,95 @@ public class TargetCompass extends View {
 
 	
 	
+	
+	
+	
+	
+	
+	
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Display Options
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	
+	public void setNeedle(int needleId)
+	{
+		if (needleId >=0 && needleId < needles.length){
+			needle_raw = needles[needleId];
+			needle = null;
+			this.invalidate();
+		}
+	}
+	
+	
+	public void setColor(int color)
+	{
+		this.color = color | 0xFF000000;
+		nwse = null;
+		needle = null;
+		this.invalidate();
+	}
+	
+	public int getColor()
+	{
+		return this.color;
+	}
+	
+	
+	@Override
+	public void press(boolean autoUnpress)
+	{
+		if (!this.pressed)
+		{			
+			this.pressed = true;
+			this.color = color & 0x7FFFFFFF;
+			nwse = null;
+			needle = null;
+			this.invalidate();
+		}
+	}
+	
+	
+	@Override
+	public void unpress()
+	{
+		this.pressed = false;
+		this.color = color | 0x80000000;
+		nwse = null;
+		needle = null;
+		this.invalidate();
+	}
+	
+	
+	public void setPowerSaver(boolean b)
+	{
+		if (b != powerSaver)
+		{
+			powerSaver = b;
+			nwse = null; 
+			needle = null;
+			this.invalidate();
+		}
+	}
+	
+	
+	public boolean getPowerSaver()
+	{
+		return powerSaver;
+	}
+	
+
+	
 
 	
 	
+
+	
+	
+
+	
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Event Handlers
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	@Override
 	/**
 	 * The main routine of the class, draws the compass images to the screen.
@@ -280,38 +289,37 @@ public class TargetCompass extends View {
 	 */
 	protected void onDraw(Canvas canvas) {
 		this.onDrawBackground(canvas);
-		boolean isPressed = (color & 0x80000000) == 0;
 		if (nwse == null || needle == null) initialize();
 		
 		long time = System.currentTimeMillis();
 		if (nwse_display.isVisible()) 
 		{
 			canvas.save();
-			if (isPressed) canvas.translate(2, 2);
+			if (pressed) canvas.translate(2, 2);
 			canvas.rotate(nwse_display.getBearing(), cx, cy);
 			nwse.draw(canvas); time = logTime(time, "nwse");
 
 			if (needle_display.isVisible()) 
 			{
-				if (isPressed) canvas.translate(-2, -2);
+				if (pressed) canvas.translate(-2, -2);
 				canvas.rotate(needle_display.getBearing(), cx, cy);
 				needle.draw(canvas); time = logTime(time, "needle");
-
-				canvas.restore();
-			} else 
-			{
-				canvas.restore();
-//				canvas.drawText(no_target_message, cx, cy, error_message_paint);
-			}
+			} 
+			
+			canvas.restore();
 		} 
-		else 
-		{
-//			canvas.drawText(no_bearing_message, cx, cy, error_message_paint);
-		}
 		
 		if (!nwse_display.isStable() | !needle_display.isStable()) postInvalidate();
 	}
 
+	
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		Log.i(null, "onSizeChanged w=" + w + " h=" + h);
+		super.onSizeChanged(w, h, oldw, oldh);
+		setDimensions(w, h);
+	}
+	
 	
 	private long logTime(long startTime, String m)
 	{
@@ -324,18 +332,15 @@ public class TargetCompass extends View {
 	
 	
 	
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		Log.i(null, "onSizeChanged w=" + w + " h=" + h);
-		super.onSizeChanged(w, h, oldw, oldh);
-		setDimensions(w, h);
-	}
+
 	
 	
 	
 	
 	
-		
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Hidden Functionality
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	/**
 	 * Updates the display controls with the new target and location.
 	 * If the displays become unstable, will postInvalidate to ensure 
@@ -366,29 +371,16 @@ public class TargetCompass extends View {
 
 		if (!nwse_display.isStable() | !needle_display.isStable())
 		{
-			postInvalidate();
+			if (!this.pressed) postInvalidate();
 		}
 	}
+
 	
 	/**
-	 * Manufactures a paint object that is suited to drawing error messages on
-	 * the compass window.
-	 * 
-	 * @return the constructed paint object
+	 * Preps the image buffers to contain the 
+	 * appropriate drawables sized and colored
+	 * properly
 	 */
-	private Paint buildErrorPaint() {
-		Paint p = new Paint();
-		p.setARGB(0xFF, 0xF9, 0x9F, 00);
-		p.setTextAlign(Paint.Align.CENTER);
-		p.setTextSize(14);
-		p.setTypeface(Typeface.create("Georgia", Typeface.BOLD));
-		p.setAntiAlias(true);
-
-		return p;
-	}
-
-	
-	
 	private void initialize()
 	{
 		if (powerSaver)
@@ -493,6 +485,10 @@ public class TargetCompass extends View {
 	
 	
 	
+	
+	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Inner Classes
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	/**
 	 * Internal class to handle the animation of the compass
 	 * face for intermediate positions while turning the graphics
@@ -505,9 +501,6 @@ public class TargetCompass extends View {
 	 * Whenever the target or nwse are not displayed, setting the
 	 * target or nwse will cause them to appear immediately in their 
 	 * correct positions without intermediate animation. 
-	 * 
-	 * 
-	 * @author Andrew Evenson
 	 *
 	 */
 	private static class ProgressiveDisplay
@@ -630,15 +623,7 @@ public class TargetCompass extends View {
 	
 	
 	
-	
-	
-	
-	
 
-	
-	
-	
-	
 	
 	
 	/**
@@ -669,17 +654,17 @@ public class TargetCompass extends View {
 		public void setBounds(Rect bounds)
 		{
 			this.r = bounds;
-			int x = (r.right - r.left)/8;
+			int x = (r.right - r.left)/16;
 			
 			path = new Path();
-			path.moveTo(r.left + 3*x, r.top + 6*x);
-			path.lineTo(r.left + 3*x, r.top + 3*x);
-			path.lineTo(r.left + 2*x, r.top + 3*x);
-			path.lineTo(r.left + 4*x, r.top + 1*x);
-			path.lineTo(r.left + 6*x, r.top + 3*x);
-			path.lineTo(r.left + 5*x, r.top + 3*x);
-			path.lineTo(r.left + 5*x, r.top + 6*x);
-			path.lineTo(r.left + 3*x, r.top + 6*x);			
+			path.moveTo(r.left + 7*x, r.top + 10*x);
+			path.lineTo(r.left + 7*x, r.top + 7*x);
+			path.lineTo(r.left + 6*x, r.top + 7*x);
+			path.lineTo(r.left + 8*x, r.top + 5*x);
+			path.lineTo(r.left + 10*x, r.top + 7*x);
+			path.lineTo(r.left + 9*x, r.top + 7*x);
+			path.lineTo(r.left + 9*x, r.top + 10*x);
+			path.lineTo(r.left + 7*x, r.top + 10*x);			
 		}
 		
 		public void setColor(int color)
@@ -717,6 +702,7 @@ public class TargetCompass extends View {
 		public NWSE()
 		{			
 			p.setAntiAlias(true);
+			p.setTextAlign(Align.CENTER);
 		}
 		
 		
@@ -726,6 +712,7 @@ public class TargetCompass extends View {
 			c.drawText("S", coordinates[2], coordinates[3], p);
 			c.drawText("E", coordinates[4], coordinates[5], p);
 			c.drawText("W", coordinates[6], coordinates[7], p);
+			
 		}
 
 		
@@ -736,12 +723,13 @@ public class TargetCompass extends View {
 			this.r = bounds;
 			float cx = (bounds.left + bounds.right)/2;
 			float cy = (bounds.top + bounds.bottom)/2;
+			float offset = (bounds.top + bounds.bottom)/4;
 			
-			
-			coordinates[0] = cx; coordinates[1] = bounds.top + 5;
-			coordinates[2] = cx; coordinates[3] = bounds.bottom - 5;
-			coordinates[4] = bounds.right - 5; coordinates[5] = cy;
-			coordinates[6] = bounds.left + 5; coordinates[7] = cy;			
+			p.setTextSize(offset/3);
+			coordinates[0] = cx; coordinates[1] = bounds.top + offset;
+			coordinates[2] = cx; coordinates[3] = bounds.bottom - offset;
+			coordinates[4] = bounds.right - offset; coordinates[5] = cy;
+			coordinates[6] = bounds.left + offset; coordinates[7] = cy;			
 		}
 		
 		public void setColor(int color)

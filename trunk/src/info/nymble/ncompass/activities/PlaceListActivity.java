@@ -180,11 +180,13 @@ public class PlaceListActivity extends Activity
 			Location location = new Location();
 			location.setLatitude( Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) ));
 			location.setLongitude( Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) ));
-			
+			String title = c.getString(c.getColumnIndex(Places.TITLE));
 			Intent i = new Intent(Intent.VIEW_ACTION);
 			
 			
 			i.putExtra("Location", location);
+			i.putExtra("Title", title);
+			
 			i.setClass(this, TargetCompassActivity.class);
 			
 			Log.w(null, "loading map at location=" + location);
