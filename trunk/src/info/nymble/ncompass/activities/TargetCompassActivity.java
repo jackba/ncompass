@@ -4,6 +4,7 @@ import info.nymble.ncompass.LocationListener;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.R;
+import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.AudioStatus;
 import info.nymble.ncompass.view.Format;
 import info.nymble.ncompass.view.TargetCompass;
@@ -15,6 +16,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.net.Uri;
@@ -269,8 +271,20 @@ public class TargetCompassActivity extends Activity
         }
         );
         
+        menu.add(1, 2, "Target Current Location", new Runnable()
+        {
+            public void run()
+            {
+                targetHere();
+            }
+        }
+        );
         
-        menu.add(1, 1, "Send Target", new Runnable()
+        
+        
+        
+        
+        menu.add(2, 1, "Send Target", new Runnable()
         {
             public void run()
             {
@@ -280,36 +294,37 @@ public class TargetCompassActivity extends Activity
         );
         
         
-        menu.add(1, 1, "Map Target", new Runnable()
+        menu.add(2, 1, "Map Target", new Runnable()
         {
             public void run()
             {
-                Log.w("menu", "mapping target");
+         		Location t = compass.getTarget();
+        		Uri uri = Uri.parse("geo:" + t.getLatitude() + "," + t.getLongitude());
+        		Intent i = new Intent(Intent.VIEW_ACTION, uri);
+        	
+        		Log.i(null, "loading map at uri=" + uri);
+        		startActivity(i);
             }
         }
         );
         
         
-        
-        
-
-        
-        menu.add(1, 2, "Set Color", new Runnable()
+        menu.add(2, 3, "Show Target List", new Runnable()
         {
             public void run()
             {
-            	Intent i = new Intent(context, InputFieldActivity.class);
-                
-            	i.putExtra(InputFieldActivity.TITLE, "Select Compass Color");
-            	i.putExtra(InputFieldActivity.LABEL, "RGB color value");
-            	i.putExtra(InputFieldActivity.DEFAULT, Integer.toHexString((int)(Math.random()*0xFFFFFF)));
+            	Intent i = new Intent(context, PlaceListActivity.class);
 
-            	startSubActivity(i, SELECT_COLOR);
+            	i.putExtra("List", listId);
+
+            	startActivity(i);
             }
         }
         );
+        
 
-        menu.add(2, 2, "Display Settings", new Runnable()
+
+        menu.add(3, 1, "Display Settings", new Runnable()
         {
             public void run()
             {

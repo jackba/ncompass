@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -31,7 +32,6 @@ import android.view.Menu.Item;
 import android.widget.AdapterView;
 import android.widget.Gallery;
 import android.widget.GalleryAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -56,6 +56,7 @@ public class PlaceListActivity extends Activity
     MenuManager menu;
     ListLoader loader = new ListLoader();
     
+    private SharedPreferences preferences;
     
     
     @Override
@@ -65,11 +66,13 @@ public class PlaceListActivity extends Activity
         tracker = new LocationTracker(this);
         setDefaultKeyMode(SHORTCUT_DEFAULT_KEYS);
         setContentView(R.layout.list_gallery);
-
+        preferences = getPreferences(0);
+        
         gallery = (Gallery) findViewById(R.id.list_gallery);
         list = (ListView) findViewById(R.id.list_contents);
         loadingText = (TextView) findViewById(R.id.list_loading);
         emptyText = (TextView) findViewById(R.id.list_empty);
+        
         
         galleryAdapter = new TextListAdapter(this);
         gallery.setAdapter(galleryAdapter);
@@ -99,10 +102,18 @@ public class PlaceListActivity extends Activity
         TextView empty = new TextView(this);
         empty.setText("No places in list");
         list.setEmptyView(empty);
+        setInitialList();
     }
 
     
     @Override
+	protected void onStop() {
+		setList(gallery.getSelectedItemId());
+		super.onStop();
+	}
+
+
+	@Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
     	this.menu = new MenuManager(this, menu);
@@ -159,6 +170,13 @@ public class PlaceListActivity extends Activity
 	}
 
 
+	
+	
+	
+	
+	
+	
+	
 	private void removeList()
     {
     	long listId = gallery.getSelectedItemId();
@@ -174,16 +192,6 @@ public class PlaceListActivity extends Activity
     	long placeId = list.getSelectedItemId();
 
         placeListAdapter.deletePlace(placeId);
-        displayLoadedState();
-    }
-    
-    
-    private void addHere()
-    {
-    	
-    	long listId = gallery.getSelectedItemId();
-
-        placeListAdapter.addPlace(listId);
         displayLoadedState();
     }
     
@@ -211,24 +219,42 @@ public class PlaceListActivity extends Activity
 			this.startActivity(i);
     	}
     }
-    
-    
-    private void mapPlace()
-    {
-    	long placeId = list.getSelectedItemId();
-    	Cursor c = Places.get(this.getContentResolver(), placeId);  
 
-    	if ( c.first() )
+    
+    private void setInitialList()
+    {
+    	Intent i = getIntent();	
+    	long listId = i.getLongExtra("List", -1);
+    	int position = -1;
+    	
+    	if (listId == -1) listId = getList();
+    	if (listId != -1) position = galleryAdapter.findPosition(listId);
+    	
+    	Log.w("PlaceList", "loading listId=" + listId + " at position=" + position);
+    	if (position >= 0) gallery.setSelection(position);
+    }
+    
+    private long getList()
+    {
+    	return preferences.getLong("List", -1);
+    }
+
+    private void setList(long listId)
+    {
+    	if (listId >= 0)
     	{    		
-			double lat = Double.parseDouble( c.getString(c.getColumnIndex(Places.LAT)) );
-			double lon = Double.parseDouble( c.getString(c.getColumnIndex(Places.LON)) );
-			Uri uri = Uri.parse("geo:" + lat + "," + lon);
-			Intent i = new Intent(Intent.VIEW_ACTION, uri);
-		
-			Log.w(null, "loading map at uri=" + uri);
-			this.startActivity(i);
+    		SharedPreferences.Editor e = preferences.edit();
+    		e.putLong("List", listId);
+    		e.commit();
     	}
     }
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -286,14 +312,11 @@ public class PlaceListActivity extends Activity
     	Item newList;
     	Item deleteList;
     	
-//    	Item placeSeparator;
-    	Item copyPlace;
+
     	Item deletePlace;
     	Item targetPlace;
-    	Item mapPlace;
 
-//    	Item hereSeparator;
-    	Item addHere;
+
     	
     	
     	MenuManager(final Context context, Menu menu)
@@ -321,10 +344,7 @@ public class PlaceListActivity extends Activity
             );
             
             
-     	
-//            placeSeparator = menu.addSeparator(2, 0);
-//    		
-            
+
             deletePlace = menu.add(2, 1, "Delete Place", new Runnable()
         	{
         		public void run()
@@ -334,15 +354,7 @@ public class PlaceListActivity extends Activity
         	}
         	);
             
-            copyPlace = menu.add(2, 2, "Copy Place", new Runnable()
-        	{
-        		public void run()
-        		{
-//        			removePlace();
-        		}
-        	}
-        	);
-            
+
             
             
             targetPlace = menu.add(2, 3, "Target Place", new Runnable()
@@ -353,29 +365,6 @@ public class PlaceListActivity extends Activity
         		}
         	}
         	);
-            
-            
-            mapPlace = menu.add(2, 4, "Map Place", new Runnable()
-        	{
-        		public void run()
-        		{
-        			mapPlace();
-        		}
-        	}
-        	);
-            
-            
-            
-//            hereSeparator = menu.addSeparator(3, 0);
-            
-            addHere = menu.add(3, 1, "Add Here", new Runnable()
-        	{
-        		public void run()
-        		{
-        			addHere();
-        		}
-        	}
-        	);
     	}
     	
     	
@@ -383,11 +372,8 @@ public class PlaceListActivity extends Activity
     	{
     		boolean showPlaces = placeListAdapter.getCount() > 0;
     		
-//    		placeSeparator.setShown(showPlaces);
-    		copyPlace.setShown(showPlaces);
     		deletePlace.setShown(showPlaces);
     		targetPlace.setShown(showPlaces);
-    		mapPlace.setShown(showPlaces);
     	}
     	
     }
