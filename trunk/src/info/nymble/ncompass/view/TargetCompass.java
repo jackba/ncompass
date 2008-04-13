@@ -325,7 +325,7 @@ public class TargetCompass extends View {
 	{
 		long endTime = System.currentTimeMillis();
 		
-		Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
+//		Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
 		
 		return endTime;
 	}
@@ -721,11 +721,12 @@ public class TargetCompass extends View {
 		public void setBounds(Rect bounds)
 		{
 			this.r = bounds;
-			float cx = (bounds.left + bounds.right)/2;
-			float cy = (bounds.top + bounds.bottom)/2;
-			float offset = (bounds.top + bounds.bottom)/4;
+			int w = (bounds.top + bounds.bottom);
+			float cx = w/2;
+			float cy = w/2;
+			float offset = w/6;
 			
-			p.setTextSize(offset/3);
+			p.setTextSize(w/10);
 			coordinates[0] = cx; coordinates[1] = bounds.top + offset;
 			coordinates[2] = cx; coordinates[3] = bounds.bottom - offset;
 			coordinates[4] = bounds.right - offset; coordinates[5] = cy;

@@ -31,8 +31,10 @@ import android.view.Menu.Item;
 import android.widget.AdapterView;
 import android.widget.Gallery;
 import android.widget.GalleryAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlaceListActivity extends Activity
@@ -78,6 +80,21 @@ public class PlaceListActivity extends Activity
         
         placeListAdapter =  new PlaceListAdapter(this, tracker);
         list.setAdapter(placeListAdapter);  
+        list.setFocusableInTouchMode(true);
+        list.setOnItemClickListener(new OnItemClickListener()
+        {
+			public void onItemClick(AdapterView adapter, View view, int arg2,
+					long arg3) {
+				if (!view.isSelected())
+				{
+					view.setSelected(true);
+				}
+				else
+				{					
+					targetPlace();
+				}
+		}});
+
         
         TextView empty = new TextView(this);
         empty.setText("No places in list");
@@ -125,11 +142,12 @@ public class PlaceListActivity extends Activity
 		Log.i(null, "gallery focus=" + gallery.isFocusable() + " windowFocus=" + gallery.hasWindowFocus());
 		
 		gallery.setFocusable(false);
-		if (keyCode == 21)
+		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && gallery.getSelectedItemPosition() > 0)
 		{
 			gallery.setSelection(position - 1, true);
 		}
-		else if (keyCode == 22)
+		else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && 
+				gallery.getSelectedItemPosition() < gallery.getCount() - 1)
 		{
 			gallery.setSelection(position + 1, true);
 		}
