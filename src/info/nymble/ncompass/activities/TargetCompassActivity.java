@@ -15,6 +15,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Rect;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.widget.TextView;
 
 public class TargetCompassActivity extends Activity
@@ -47,6 +49,9 @@ public class TargetCompassActivity extends Activity
 	private long listId;
 	
 	
+	
+	private Rect compassCoords = null;
+	private boolean compassDown = false;
 	
     
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -152,8 +157,35 @@ public class TargetCompassActivity extends Activity
 		
 		return super.onKeyUp(keyCode, event);
 	}
-
 	
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		if (compassCoords == null){
+			compassCoords = new Rect();
+			compass.getGlobalVisibleRect(compassCoords);
+		}
+		
+		if (MotionEvent.ACTION_DOWN == event.getAction() && 
+				compassCoords.contains((int)event.getX(), (int)event.getY()))
+		{
+			compass.press(false);
+			compassDown = true;
+		}
+		else if (MotionEvent.ACTION_UP == event.getAction() && compassDown)
+		{
+			compassDown = false;
+			compass.unpress();
+			targetHere();
+		}
+		else if (compassDown && !compassCoords.contains((int)event.getX(), (int)event.getY()))
+		{
+			compass.unpress();
+			compassDown = false;
+		}
+
+		return super.onTouchEvent(event);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, String data, Bundle extras) 
 	{
@@ -487,7 +519,20 @@ public class TargetCompassActivity extends Activity
 	private void setTarget(Location t, String titleText)
 	{
 		compass.setTarget(t);
-		title.setText(titleText == null ? "" : titleText);
+		
+		if (t == null)
+		{
+			title.setText("<no target selected>");
+		}
+		if (titleText == null)
+		{
+			title.setText("<untitled target>");
+		}
+		else 
+		{
+			title.setText(titleText);
+		}
+		
 		updateDistance();
 	}
 	

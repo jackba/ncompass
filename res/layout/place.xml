@@ -35,7 +35,8 @@
 	<TableLayout android:stretchColumns="1"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content" 
-		android:paddingLeft="4dip">
+		android:paddingLeft="4dip"
+		android:visibility="gone">
 	    
 	    <TableRow 
 	    	android:paddingBottom="2dip" 
