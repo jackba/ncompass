@@ -744,12 +744,12 @@ public class TargetCompassActivity extends Activity
 
             
             
-            menu.add(2, 1, "Target Current Location", new Runnable()
+            menu.add(2, 1, "Target Here", new Runnable()
             {
                 public void run()
                 {
-//                    targetHere();
-                	setTarget(null, null);
+                	targetHere();
+//                	setTarget(null, null);
                 }
             }
             );
