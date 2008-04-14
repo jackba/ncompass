@@ -3,6 +3,7 @@ package info.nymble.ncompass.activities;
 import info.nymble.measure.Stopwatch;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.PlaceBook;
+import info.nymble.ncompass.PlaceBookDB;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.Format;
@@ -73,7 +74,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     
     public void deletePlace(long placeId)
     {
-    	Log.i(null, "deleting place id=" + placeId);
+    	Log.i("PlaceListAdapter", "deleting place id=" + placeId);
     	
     	if (list != null)
     	{
@@ -82,7 +83,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
 				 
 				if (p.id == placeId)
 				{
-					 Log.i(null, "removed element from list");
+					 Log.i("PlaceListAdapter", "removed element from list");
 					 i.remove();
 					 break;
 				}
@@ -93,7 +94,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     
     public void addPlace(long listId)
     {
-    	Log.i(null, "adding place to list id=" + listId);
+    	Log.i("PlaceListAdapter", "adding place to list id=" + listId);
     	
     	if (list != null)
     	{
@@ -103,6 +104,8 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
     		Cursor c = Places.get(resolver, ContentUris.parseId(place));
     		    		
     		list.loadDataFromCursor(c, list.places);
+    		
+    		PlaceBookDB.close(c);
     	}
     }
     
@@ -210,7 +213,7 @@ public class PlaceListAdapter extends ObserverManager implements ListAdapter
         {
             Cursor c = PlaceBook.Places.query(resolver, listId);
             loadDataFromCursor(c, places);
-            c.close();
+            PlaceBookDB.close(c);
         }
         
     	

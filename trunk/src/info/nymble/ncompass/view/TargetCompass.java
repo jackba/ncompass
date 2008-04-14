@@ -291,19 +291,18 @@ public class TargetCompass extends View {
 		this.onDrawBackground(canvas);
 		if (nwse == null || needle == null) initialize();
 		
-		long time = System.currentTimeMillis();
 		if (nwse_display.isVisible()) 
 		{
 			canvas.save();
 			if (pressed) canvas.translate(2, 2);
 			canvas.rotate(nwse_display.getBearing(), cx, cy);
-			nwse.draw(canvas); time = logTime(time, "nwse");
+			nwse.draw(canvas);
 
 			if (needle_display.isVisible()) 
 			{
 				if (pressed) canvas.translate(-2, -2);
 				canvas.rotate(needle_display.getBearing(), cx, cy);
-				needle.draw(canvas); time = logTime(time, "needle");
+				needle.draw(canvas); 
 			} 
 			
 			canvas.restore();
@@ -315,20 +314,13 @@ public class TargetCompass extends View {
 	
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		Log.i(null, "onSizeChanged w=" + w + " h=" + h);
+		Log.d("TargetCompass", "onSizeChanged w=" + w + " h=" + h);
 		super.onSizeChanged(w, h, oldw, oldh);
 		setDimensions(w, h);
 	}
 	
 	
-	private long logTime(long startTime, String m)
-	{
-		long endTime = System.currentTimeMillis();
-		
-//		Log.w("Log Time", m + " elapsed=" + (endTime - startTime));
-		
-		return endTime;
-	}
+
 	
 	
 	
@@ -445,8 +437,6 @@ public class TargetCompass extends View {
 		float cx = bounds.width()*.5F;
 		float r = bounds.width()*0.43F; // accomadates the padding in the image
 		
-		Log.w(null, "centering the circle cx=" + cx + " cy=" + cx + " r=" + r );
-
 		p.setColor(color);
 		p.setAntiAlias(true);
 		c.drawCircle(cx, cx, r, p);

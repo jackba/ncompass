@@ -53,8 +53,7 @@ public class TargetCompassActivity extends Activity
 	private TextView eta;
 
 	private SharedPreferences preferences;
-	private long listId;
-	
+
 	
 	
 	private Rect compassCoords = null;
@@ -81,8 +80,7 @@ public class TargetCompassActivity extends Activity
 		target = (TextView) findViewById(R.id.place_target);
 		speed = (TextView) findViewById(R.id.place_speed);
 		eta = (TextView) findViewById(R.id.place_eta);
-		listId = PlaceBook.Lists.get(getContentResolver(), "targeted");
-		
+
 		setColor();
 		setNeedle();
 		loadLocationInfo();
@@ -109,7 +107,6 @@ public class TargetCompassActivity extends Activity
 	{
 		super.onResume();
 		if (tracker != null) tracker.start();
-		Log.w(null, "Starting again resume");
 	}
 	
 	
@@ -118,7 +115,6 @@ public class TargetCompassActivity extends Activity
 	{
 		super.onResume();
 		if (tracker != null) tracker.start();
-		Log.w(null, "Starting again start ");
 	}	
 	
 	@Override
@@ -141,8 +137,6 @@ public class TargetCompassActivity extends Activity
      +++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		Log.w("KeyDown", "keyCode=" + keyCode);
-		
 		if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER){
 			compass.press(false);
 		}
@@ -154,8 +148,7 @@ public class TargetCompassActivity extends Activity
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		Log.w("KeyUp", "keyCode=" + keyCode);
-		
+
 		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT){
 			readOrientation();
 		}
@@ -251,12 +244,12 @@ public class TargetCompassActivity extends Activity
 				}
 				break;
 			default:
-				Log.i(null, "Requested something, but not sure what it was requestCode=" + requestCode);
+				Log.i("TargetCompassActivity", "Requested something, but not sure what it was requestCode=" + requestCode);
 			}
 		}
 		else
 		{
-			Log.i(null, "cancelled request");
+			Log.i("TargetCompassActivity", "cancelled request");
 		}
 	}
 
@@ -294,7 +287,7 @@ public class TargetCompassActivity extends Activity
     	}
     	catch (Exception e)
     	{
-    		Log.w(null, "error occured while setting color " + e.getMessage());
+    		Log.w("TargetCompassActivity", "error occured while setting color " + e.getMessage());
     	}
     }
     
@@ -336,7 +329,7 @@ public class TargetCompassActivity extends Activity
     	}
     	catch (Exception e)
     	{
-    		Log.w(null, "error occured while setting needle " + e.getMessage());
+    		Log.w("TargetCompassActivity", "error occured while setting needle " + e.getMessage());
     	}
     }
     
@@ -412,7 +405,7 @@ public class TargetCompassActivity extends Activity
     	}
     	catch (Exception e)
     	{
-    		Log.w(null, "error occured while setting powersaver " + e.getMessage());
+    		Log.w("TargetCompassActivity", "error occured while setting powersaver " + e.getMessage());
     	}
     }
     
@@ -521,7 +514,7 @@ public class TargetCompassActivity extends Activity
     {
     	setTarget(t, titleText);
     	ContentResolver resolver = this.getContentResolver();    	
-    	PlaceBook.Places.add(resolver, t, listId);
+    	PlaceBook.Places.add(resolver, t, getListId());
     }
     
     private void logTargetTitle(String titleText)
@@ -529,12 +522,24 @@ public class TargetCompassActivity extends Activity
     	Location t = compass.getTarget();
     	setTarget(t, titleText);
     	ContentResolver resolver = this.getContentResolver();    	
-    	Uri place = PlaceBook.Places.add(resolver, t, listId);
+    	Uri place = PlaceBook.Places.add(resolver, t, getListId());
     	long placeId = Long.parseLong(place.getLastPathSegment());
     	PlaceBook.Places.update(resolver, placeId, titleText, null, null);
     }
     
-    
+	private long getListId()
+	{
+		ContentResolver r = getContentResolver();
+		long listId = PlaceBook.Lists.get(r, "targeted");;
+		
+		if (listId == -1) 
+		{
+			Uri uri = PlaceBook.Lists.add(r, "targeted", 20, true, true);
+			listId = Long.parseLong( uri.getLastPathSegment());
+		}
+		
+		return listId;
+	}
     
     
     
@@ -714,7 +719,7 @@ public class TargetCompassActivity extends Activity
 					Uri uri = Uri.parse("geo:" + t.getLatitude() + "," + t.getLongitude());
 					Intent i = new Intent(Intent.VIEW_ACTION, uri);
 					
-					Log.i(null, "loading location of uri=" + uri);
+					Log.i("TargetCompassActivity", "mapping uri=" + uri);
 					startActivity(i);
 				}
 			}
@@ -726,12 +731,12 @@ public class TargetCompassActivity extends Activity
 				public void run()
 				{
 					Location t = compass.getTarget();
-					String uri = "geo:" + t.getLatitude() + "," + t.getLongitude();
+					String uri = "geo:" + t.getLatitude() + "," + t.getLongitude() + "," + t.getAltitude();
 					Intent i = new Intent(context, SendLocationActivity.class);
 					
 					i.putExtra(SendLocationActivity.PARAM_ADDRESS, uri);
 					
-					Log.i(null, "loading map at uri=" + uri);
+					Log.i("TargetCompassActivity", "loading map at uri=" + uri);
 					startActivity(i);
 				}
 			}
@@ -758,7 +763,7 @@ public class TargetCompassActivity extends Activity
                 {
                 	Intent i = new Intent(context, PlaceListActivity.class);
 
-                	i.putExtra("List", listId);
+                	i.putExtra("List", getListId());
 
                 	startActivity(i);
                 }

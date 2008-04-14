@@ -1,6 +1,7 @@
 package info.nymble.ncompass.activities;
 
 import info.nymble.ncompass.LocationTracker;
+import info.nymble.ncompass.PlaceBookDB;
 import info.nymble.ncompass.R;
 import info.nymble.ncompass.PlaceBook.Lists;
 import info.nymble.ncompass.PlaceBook.Places;
@@ -134,24 +135,20 @@ public class PlaceListActivity extends Activity
     {
 		super.onActivityResult(requestCode, resultCode, data, extras);
 		
-		if (requestCode==LIST_ADDED)
+		if (requestCode==LIST_ADDED && resultCode == Activity.RESULT_OK && data != null)
 		{
 			Uri uri = Uri.parse(data);
 			int position = galleryAdapter.findPosition(ContentUris.parseId(uri));
 			
 			gallery.setSelection(position);
 		}
-		
-		
 	}
 
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		int position = gallery.getSelectedItemPosition();
-		Log.i(null, "key event code=" + keyCode + " event=" + event.toString() + " pos=" + position);
-		Log.i(null, "gallery focus=" + gallery.isFocusable() + " windowFocus=" + gallery.hasWindowFocus());
-		
+
 		gallery.setFocusable(false);
 		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && gallery.getSelectedItemPosition() > 0)
 		{
@@ -181,7 +178,7 @@ public class PlaceListActivity extends Activity
     {
     	long listId = gallery.getSelectedItemId();
 
-        Log.i(null, "removing list id=" + listId);
+        Log.i("PlaceListActivity", "removing list id=" + listId);
         Lists.delete(getContentResolver(), listId);
     }
     
@@ -215,9 +212,11 @@ public class PlaceListActivity extends Activity
 			
 			i.setClass(this, TargetCompassActivity.class);
 			
-			Log.w(null, "loading map at location=" + location);
+			Log.i("PlaceListActivity", "targeting " + location);
 			this.startActivity(i);
     	}
+    	
+    	PlaceBookDB.close(c);
     }
 
     
@@ -230,7 +229,7 @@ public class PlaceListActivity extends Activity
     	if (listId == -1) listId = getList();
     	if (listId != -1) position = galleryAdapter.findPosition(listId);
     	
-    	Log.w("PlaceList", "loading listId=" + listId + " at position=" + position);
+    	Log.d("PlaceListActivity", "loading listId=" + listId + " at position=" + position);
     	if (position >= 0) gallery.setSelection(position);
     }
     
@@ -574,6 +573,8 @@ public class PlaceListActivity extends Activity
                     cursor.next();
                 }
             }
+            
+            PlaceBookDB.close(cursor);
         }
     }
     

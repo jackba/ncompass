@@ -60,7 +60,7 @@ public class LocationTracker
         {
             locationProvider = list.get(i);
         }
-        Log.i(null, "Location providers count=" + list.size());
+        Log.i("LocationTracker", "Location providers count=" + list.size());
 
         Stopwatch.stop("find provider");
     }
@@ -88,7 +88,7 @@ public class LocationTracker
     	started = true;
     	if (!listening && listeners.size() > 0 && locationProvider != null)
     	{
-    		Log.i(null, "Registering Location Tracking");
+    		Log.i("LocationTracker", "Registering Location Tracking");
     		context.registerReceiver(intentReceiver, filter);
     		locationManager.requestUpdates(locationProvider, ACCEPTABLE_AGE_THRESHOLD, 1, intent);
     		listening = true;
@@ -102,7 +102,7 @@ public class LocationTracker
     	{
     		try
     		{    			
-    			Log.i(null, "Unregistering Location Tracking");
+    			Log.i("LocationTracker", "Unregistering Location Tracking");
     			listening = false;
     			locationManager.removeUpdates(intent);
     			context.unregisterReceiver(intentReceiver);
@@ -166,7 +166,7 @@ public class LocationTracker
 				}
 				catch (Exception e)
 				{
-					Log.w(null, "failed to update observers of location change");
+					Log.w("LocationTracker", "failed to update observers of location change");
 				}
 			}
 		}
@@ -183,28 +183,4 @@ public class LocationTracker
     	
     	return currentLocation == null || time - currentLocation.getTime() > ACCEPTABLE_AGE_THRESHOLD;
     }
-
-//    private void logProvider(LocationProvider p)
-//    {
-//        Log.i("NCompass Logger", "name=" + p.getName());
-//        Log.i("NCompass Logger", "getPowerRequirement=" + p.getPowerRequirement());
-//        Log.i("NCompass Logger", "getPowerRequirement=" + p.getPowerRequirement());
-//        Log.i("NCompass Logger", "hasMonetaryCost=" + p.hasMonetaryCost());
-//        Log.i("NCompass Logger", "requiresCell=" + p.requiresCell());
-//        Log.i("NCompass Logger", "requiresNetwork=" + p.requiresNetwork());
-//        Log.i("NCompass Logger", "requiresSatellite=" + p.requiresSatellite());
-//        Log.i("NCompass Logger", "supportsAltitude=" + p.supportsAltitude());
-//        Log.i("NCompass Logger", "supportsBearing=" + p.supportsBearing());
-//        Log.i("NCompass Logger", "supportsSpeed=" + p.supportsSpeed());
-//    }
-//
-//    private void logLocation(Location l)
-//    {
-//        Log.i("NCompass Location Logger", "getLatitude=" + l.getLatitude());
-//        Log.i("NCompass Location Logger", "getLongitude=" + l.getLongitude());
-//        Log.i("NCompass Location Logger", "getBearing=" + l.getBearing());
-//        Log.i("NCompass Location Logger", "getAltitude=" + l.getAltitude());
-//        Log.i("NCompass Location Logger", "getSpeed=" + l.getSpeed());
-//        Log.i("NCompass Location Logger", "getTime=" + l.getTime());
-//    }
 }

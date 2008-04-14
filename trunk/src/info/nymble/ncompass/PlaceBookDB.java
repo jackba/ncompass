@@ -231,5 +231,15 @@ public class PlaceBookDB extends SQLiteOpenHelper
                 buffer.setLength(0);
             }
         }
+        
+        
+        public static void close(Cursor cursor)
+        {
+        	try
+        	{
+        		cursor.close();
+        	}
+        	catch (Exception e){}
+        }
     
 }
