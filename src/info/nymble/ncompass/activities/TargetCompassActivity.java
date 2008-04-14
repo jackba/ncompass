@@ -4,7 +4,6 @@ import info.nymble.ncompass.LocationListener;
 import info.nymble.ncompass.LocationTracker;
 import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.R;
-import info.nymble.ncompass.PlaceBook.Places;
 import info.nymble.ncompass.view.AudioStatus;
 import info.nymble.ncompass.view.Format;
 import info.nymble.ncompass.view.TargetCompass;
@@ -16,7 +15,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.net.Uri;
@@ -26,10 +24,15 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MotionEvent;
+import android.view.Menu.Item;
 import android.widget.TextView;
 
 public class TargetCompassActivity extends Activity
 {
+	public static final String PARAM_LOCATION = "Location";
+	public static final String PARAM_TITLE = "Title";
+	
+	
 	private final int SELECT_COLOR = 1;
 	private final int TITLE_TARGET = 2;
 	private final int DISPLAY_SETTINGS = 3;
@@ -40,6 +43,7 @@ public class TargetCompassActivity extends Activity
 	private LocationListener listener;
 	private LocationTracker tracker;
 	private TargetCompass compass;
+	private MenuManager menuManager;
 	
 	private TextView title;
 	private TextView distance;
@@ -260,92 +264,15 @@ public class TargetCompassActivity extends Activity
 	@Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-		final Context context = this;
-		
-        menu.add(1, 1, "Set Target Title", new Runnable()
-        {
-            public void run()
-            {
-                targetTitle();
-            }
-        }
-        );
-        
-        menu.add(1, 2, "Target Current Location", new Runnable()
-        {
-            public void run()
-            {
-                targetHere();
-            }
-        }
-        );
-        
-        
-        
-        
-        
-        menu.add(2, 1, "Send Target", new Runnable()
-        {
-            public void run()
-            {
-         		Location t = compass.getTarget();
-        		String uri = "geo:" + t.getLatitude() + "," + t.getLongitude();
-        		Intent i = new Intent(context, SendLocationActivity.class);
-        	
-        		i.putExtra(SendLocationActivity.PARAM_ADDRESS, uri);
-        		
-        		Log.i(null, "loading map at uri=" + uri);
-        		startActivity(i);
-            }
-        }
-        );
-        
-        
-        menu.add(2, 1, "Map Target", new Runnable()
-        {
-            public void run()
-            {
-            	Location t = compass.getTarget();
-        		Uri uri = Uri.parse("geo:" + t.getLatitude() + "," + t.getLongitude());
-        		Intent i = new Intent(Intent.VIEW_ACTION, uri);
-        	
-        		Log.i(null, "loading location of uri=" + uri);
-        		startActivity(i);
-            }
-        }
-        );
-        
-        
-        menu.add(2, 3, "Show Target List", new Runnable()
-        {
-            public void run()
-            {
-            	Intent i = new Intent(context, PlaceListActivity.class);
-
-            	i.putExtra("List", listId);
-
-            	startActivity(i);
-            }
-        }
-        );
-        
-
-
-        menu.add(3, 1, "Display Settings", new Runnable()
-        {
-            public void run()
-            {
-            	Intent i = new Intent(context, DisplaySettingsActivity.class);
-                int display = (getPowerSaver() ? -1 : getNeedle()); 
-
-            	i.putExtra(DisplaySettingsActivity.DISPLAY_MODE, display);
-            	i.putExtra(DisplaySettingsActivity.COMPASS_COLOR, compass.getColor());
-
-            	startSubActivity(i, DISPLAY_SETTINGS);
-            }
-        }
-        );
-        
+		menuManager = new MenuManager(this, menu);
+        return true;
+    }
+	
+	
+	@Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+		menuManager.prepare();
         return true;
     }
 	
@@ -471,8 +398,9 @@ public class TargetCompassActivity extends Activity
    			setLocation(location);
    		
    		if ((target.getLatitude() != 0 || target.getLongitude() != 0 || target.getBearing() != 0))
-   			setTarget(target, preferences.getString("target.title", ""));
-
+   			setTarget(target, preferences.getString("target.title", null));
+   		else
+   			setTarget(null, null);
     }
     
     
@@ -551,6 +479,19 @@ public class TargetCompassActivity extends Activity
 				}
 			});
 		}
+		else
+		{
+			handler.post(new Runnable(){
+				public void run()
+				{
+					distance.setText("");
+					target.setText("");
+					bearing.setText("");
+					speed.setText("");
+					eta.setText("");
+				}
+			});
+		}
 	}
 
 	
@@ -565,8 +506,8 @@ public class TargetCompassActivity extends Activity
     {
     	if (intent != null)
     	{
-    		Location target = (Location)intent.getExtra("Location");
-    		String titleText = intent.getStringExtra("Title");
+    		Location target = (Location)intent.getExtra(PARAM_LOCATION);
+    		String titleText = intent.getStringExtra(PARAM_TITLE);
     		
     		if (target != null)
     		{    			
@@ -610,7 +551,7 @@ public class TargetCompassActivity extends Activity
 		{
 			title.setText("<no target selected>");
 		}
-		if (titleText == null)
+		else if (titleText == null || titleText.length() == 0)
 		{
 			title.setText("<untitled target>");
 		}
@@ -634,7 +575,7 @@ public class TargetCompassActivity extends Activity
 		Intent i = new Intent(this, InputFieldActivity.class);
 
     	i.putExtra(InputFieldActivity.TITLE, "Title Your Target");
-    	i.putExtra(InputFieldActivity.LABEL, "Provide a title for your new target location");
+    	i.putExtra(InputFieldActivity.LABEL, "Provide a title for your target");
 
     	startSubActivity(i, TITLE_TARGET);
 	}
@@ -735,4 +676,122 @@ public class TargetCompassActivity extends Activity
 			new AudioStatus.MultifileAudio(AudioStatus.buildMediaArray(list, this)).play();
 		}
 	}
+	
+	
+	
+	
+	
+	
+	   
+    private class MenuManager
+    {
+    	Menu menu;
+    	
+    	Item setTitle;
+    	Item mapTarget;
+    	Item sendTarget;
+    	
+    	
+    	MenuManager(final Context context, Menu menu)
+    	{
+    		this.menu = menu;
+
+    		setTitle = menu.add(1, 1, "Set Target Title", new Runnable()
+			{
+				public void run()
+				{
+					targetTitle();
+				}
+			}
+			);
+			
+			
+			mapTarget = menu.add(1, 2, "Map Target", new Runnable()
+			{
+				public void run()
+				{
+					Location t = compass.getTarget();
+					Uri uri = Uri.parse("geo:" + t.getLatitude() + "," + t.getLongitude());
+					Intent i = new Intent(Intent.VIEW_ACTION, uri);
+					
+					Log.i(null, "loading location of uri=" + uri);
+					startActivity(i);
+				}
+			}
+			);
+			
+			
+			sendTarget = menu.add(1, 3, "Send Target", new Runnable()
+			{
+				public void run()
+				{
+					Location t = compass.getTarget();
+					String uri = "geo:" + t.getLatitude() + "," + t.getLongitude();
+					Intent i = new Intent(context, SendLocationActivity.class);
+					
+					i.putExtra(SendLocationActivity.PARAM_ADDRESS, uri);
+					
+					Log.i(null, "loading map at uri=" + uri);
+					startActivity(i);
+				}
+			}
+			);
+
+            
+            
+            menu.add(2, 1, "Target Current Location", new Runnable()
+            {
+                public void run()
+                {
+//                    targetHere();
+                	setTarget(null, null);
+                }
+            }
+            );
+
+
+            
+            
+            menu.add(2, 2, "Show Target List", new Runnable()
+            {
+                public void run()
+                {
+                	Intent i = new Intent(context, PlaceListActivity.class);
+
+                	i.putExtra("List", listId);
+
+                	startActivity(i);
+                }
+            }
+            );
+            
+
+
+            menu.add(2, 3, "Display Settings", new Runnable()
+            {
+                public void run()
+                {
+                	Intent i = new Intent(context, DisplaySettingsActivity.class);
+                    int display = (getPowerSaver() ? -1 : getNeedle()); 
+
+                	i.putExtra(DisplaySettingsActivity.DISPLAY_MODE, display);
+                	i.putExtra(DisplaySettingsActivity.COMPASS_COLOR, compass.getColor());
+
+                	startSubActivity(i, DISPLAY_SETTINGS);
+                }
+            }
+            );
+    	}
+    	
+    	
+    	public void prepare()
+    	{
+    		boolean show = compass.getTarget() != null;
+    		
+    		setTitle.setShown(show);
+    		mapTarget.setShown(show);
+    		sendTarget.setShown(show);
+    	}
+    	
+    }
 }
