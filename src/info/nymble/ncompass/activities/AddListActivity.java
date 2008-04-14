@@ -28,6 +28,17 @@ public class AddListActivity extends Activity
 	            }
 	        }
         );
+        
+        
+        Button cancel = (Button)findViewById(R.id.cancel);
+        
+        cancel.setOnClickListener(
+	        new Button.OnClickListener() {
+	            public void onClick(View v) {
+	                cancel();
+	            }
+	        }
+        );
     }
     
     
@@ -41,4 +52,10 @@ public class AddListActivity extends Activity
         this.finish();
     }
     
+    
+    private void cancel()
+    {    
+        this.setResult(Activity.RESULT_CANCELED, null);
+        this.finish();
+    }
 }

@@ -118,6 +118,7 @@ public final class PlaceBook
         	List<Place> l = loadPlacesFromCursor(c);
         	
         	if (l.size()  > 0) return l.get(0);
+        	PlaceBookDB.close(c);
         	return null;
         }
         
@@ -126,7 +127,8 @@ public final class PlaceBook
         	String list = LIST + "=" + listId;
         	Cursor c = resolver.query(Places.PLACES_URI, null, list, null, DEFAULT_ORDER);
         	List<Place> l = loadPlacesFromCursor(c);
-
+        	
+        	PlaceBookDB.close(c);
         	return l;
         }
         
@@ -255,13 +257,14 @@ public final class PlaceBook
         public static long get(ContentResolver resolver, String name)
         {
         	Cursor c = resolver.query(LISTS_URI, null, "name=?", new String[]{name}, null);
-        	
+        	long id = -1;
         	if (c.first())
         	{
-        		return c.getLong(c.getColumnIndex(Lists.ID));
+        		id = c.getLong(c.getColumnIndex(Lists.ID));
         	}
         	
-        	return -1;
+        	PlaceBookDB.close(c);
+        	return id;
         }
         
         

@@ -18,12 +18,25 @@
         android:autoText="true"
         android:capitalize="sentences"
         android:scrollHorizontally="true" />
-   		
-    <Button android:id="@+id/ok"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content" 
-        android:layout_gravity="right"
-        android:text="ok" />
-   		
+   	
+   	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal"
+	    android:paddingTop="10dip">
+	    
+	    <Button android:id="@+id/ok"
+	        android:layout_width="wrap_content" 
+	        android:layout_height="wrap_content" 
+	        android:layout_gravity="right"
+	        android:text="ok" />
+	   	
+	   	<Button android:id="@+id/cancel"
+	        android:layout_width="wrap_content" 
+	        android:layout_height="wrap_content" 
+	        android:layout_gravity="right"
+	        android:text="cancel" />
+    </LinearLayout>
 </LinearLayout>
 

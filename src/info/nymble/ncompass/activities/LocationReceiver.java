@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 public class LocationReceiver extends IntentReceiver
 {
-	Pattern pattern = Pattern.compile("geo:-?[0-9]+(\\.[0-9]+)*,-?[0-9]+(\\.[0-9]+)*");
+	Pattern pattern = Pattern.compile("geo:-?[0-9]+(\\.[0-9]+)*,-?[0-9]+(\\.[0-9]+)*(,-?[0-9]+(\\.[0-9]+)*)?");
 	private long listId = -1;
 	
 	
@@ -48,6 +48,7 @@ public class LocationReceiver extends IntentReceiver
             		
             		location.setLatitude(Double.parseDouble(parts[0]));
             		location.setLongitude(Double.parseDouble(parts[1]));
+            		location.setAltitude(parts.length > 2 ? Double.parseDouble(parts[2]) : 0.0);
             		
             		logLocation(location, context, title, from);
             		compassIntent.putExtra(TargetCompassActivity.PARAM_LOCATION, location);

@@ -186,15 +186,11 @@ public class PlaceBookProvider  extends ContentProvider
 	    {
 	        String[] args = new String[]{String.valueOf(lat), String.valueOf(lon), String.valueOf(alt)};
 	        Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_SELECT_PLACE, args);
-	        
-	        
-	        Cursor q = conn.rawQuery("SELECT * FROM Places", null);
-	        PlaceBookDB.printCursor(q, "Stuff In Places");
-	        
+	        long id = -1;
 	        
 	        if (c.first())
 	        {
-	            return c.getLong(0);
+	            id = c.getLong(0);
 	        }
 	        else
 	        {
@@ -205,8 +201,11 @@ public class PlaceBookProvider  extends ContentProvider
 	        	values.put(Places.ALT, String.valueOf(alt));
 	        	values.put(Places.CREATED, String.valueOf(System.currentTimeMillis()));
 	        	
-	            return conn.insert("Places", "_empty", values); 
+	            id = conn.insert("Places", "_empty", values); 
 	        }
+	        
+	        PlaceBookDB.close(c);
+	        return id;
 	    }
 	    
 	    
@@ -233,6 +232,7 @@ public class PlaceBookProvider  extends ContentProvider
 	            compactPlaceLists(listId);
 	        }
 	        
+	        PlaceBookDB.close(c);
 	        return entryId;
 	    }
 	    
@@ -248,6 +248,8 @@ public class PlaceBookProvider  extends ContentProvider
 	    		conn.delete("PlaceLists", "list=? AND (date<? OR (date=? AND _id<=?))", args);
 				conn.execSQL(PlaceBookDB.SQL_PLACES_CLEANUP);
 	    	}
+	    	
+	    	PlaceBookDB.close(c);
 	    }
     }
     
@@ -285,19 +287,22 @@ public class PlaceBookProvider  extends ContentProvider
 				resolver.notifyChange(Uri.withAppendedPath(Lists.LISTS_URI, String.valueOf(listId)), null);
 			}
 			
+			PlaceBookDB.close(c);
 			return affected;
 		}
 		
 		private long findList(long placeId)
 		{
 			Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_LIST, new String[]{String.valueOf(placeId)});
+			long id = -1;
 			
 			if (c.first())
 			{
-				return c.getLong(0);
+				id = c.getLong(0);
 			}
 			
-			return -1;
+			PlaceBookDB.close(c);
+			return id;
 		}
     }
     

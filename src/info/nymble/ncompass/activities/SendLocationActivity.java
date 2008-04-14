@@ -106,6 +106,7 @@ public class SendLocationActivity extends Activity
 		
 		t.setLatitude(Double.parseDouble(parts[0]));
 		t.setLongitude(Double.parseDouble(parts[1]));
+		t.setLongitude(parts.length > 2 ? Double.parseDouble(parts[2]) : 0);
 		PlaceBook.Places.add(r, t, listId);
 	}
     
