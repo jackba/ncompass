@@ -187,6 +187,11 @@ public class PlaceBookProvider  extends ContentProvider
 	        String[] args = new String[]{String.valueOf(lat), String.valueOf(lon), String.valueOf(alt)};
 	        Cursor c = conn.rawQuery(PlaceBookDB.SQL_PLACES_SELECT_PLACE, args);
 	        
+	        
+	        Cursor q = conn.rawQuery("SELECT * FROM Places", null);
+	        PlaceBookDB.printCursor(q, "Stuff In Places");
+	        
+	        
 	        if (c.first())
 	        {
 	            return c.getLong(0);
@@ -195,10 +200,10 @@ public class PlaceBookProvider  extends ContentProvider
 	        {
 	        	ContentValues values = new ContentValues();
 	        	
-	        	values.put(Places.LAT, lat);
-	        	values.put(Places.LON, lon);
-	        	values.put(Places.ALT, alt);
-	        	values.put(Places.CREATED, System.currentTimeMillis());
+	        	values.put(Places.LAT, String.valueOf(lat));
+	        	values.put(Places.LON, String.valueOf(lon));
+	        	values.put(Places.ALT, String.valueOf(alt));
+	        	values.put(Places.CREATED, String.valueOf(System.currentTimeMillis()));
 	        	
 	            return conn.insert("Places", "_empty", values); 
 	        }

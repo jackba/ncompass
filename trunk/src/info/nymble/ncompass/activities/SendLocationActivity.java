@@ -1,9 +1,13 @@
 package info.nymble.ncompass.activities;
 
 
+import info.nymble.ncompass.PlaceBook;
 import info.nymble.ncompass.R;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.gsm.SmsManager;
 import android.view.View;
@@ -21,7 +25,7 @@ public class SendLocationActivity extends Activity
 	
 	EditText to;
 	EditText message;
-	
+	String address;	// cache of geo: uri
 	 
 	@Override
 	protected void onCreate(Bundle icicle) {
@@ -62,9 +66,14 @@ public class SendLocationActivity extends Activity
 	private void loadValues()
 	{
 		Intent intent = getIntent();
-    	message.setText("\n\n( " + intent.getStringExtra("Address") + " )");
+		address = intent.getStringExtra("Address");
+    	message.setText("\n\n(" + address + ")");
 	}
 	
+
+	
+	
+
 
 	
 	private void done()
@@ -73,12 +82,32 @@ public class SendLocationActivity extends Activity
 		
 		SmsManager sm = SmsManager.getDefault();
 		sm.sendTextMessage(to.getText().toString(), null, message.getText().toString(), null, null, null); 
+		logSentLocation(getContentResolver(), address);
 		
 		setResult(Activity.RESULT_OK, null, bundle);
 		finish();
 	}
-	
 
+	
+	
+	
+	
+	private void logSentLocation(ContentResolver r, String address)
+	{
+		Location t = new Location();
+		long listId = PlaceBook.Lists.get(r, "sent");
+		String[] parts = address.substring(4).split(",");
+		
+		if (listId == -1) 
+		{
+			Uri uri = PlaceBook.Lists.add(r, "sent", 20, true, true);
+			listId = Long.parseLong( uri.getLastPathSegment());
+		}
+		
+		t.setLatitude(Double.parseDouble(parts[0]));
+		t.setLongitude(Double.parseDouble(parts[1]));
+		PlaceBook.Places.add(r, t, listId);
+	}
     
     private void cancel()
     {
